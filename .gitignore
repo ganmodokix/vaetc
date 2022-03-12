@@ -9,6 +9,7 @@
 /BEFOREPUBLISH.md
 __pycache__
 /docs
+/vaetc_scripts
 
 /aggregate/*
 !/aggregate/*.py
