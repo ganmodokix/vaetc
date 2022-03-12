@@ -1,6 +1,4 @@
-# vaetc
-
-(mainly-)VAE-based representation learning toolkit
+# vaetc: VAE-based representation learning toolkit
 
 ## Environments
 We have developed and tested this repository in the following environment:
