@@ -1,0 +1,16 @@
+h5py
+matplotlib
+numpy
+opencv-python
+ffmpeg-python
+pandas
+PyYAML
+scikit-learn
+scipy
+seaborn
+torch
+torchvision
+torchinfo
+tqdm
+requests
+orjson

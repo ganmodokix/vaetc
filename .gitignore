@@ -1,0 +1,14 @@
+/.vscode
+/datasets/*
+/assets/datasets/*
+/vaetc/assets/datasets/*
+/env
+/.env
+/runs*
+/sandbox
+/BEFOREPUBLISH.md
+__pycache__
+/docs
+
+/aggregate/*
+!/aggregate/*.py

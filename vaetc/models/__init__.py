@@ -1,0 +1,51 @@
+from .abstract import RLModel, AutoEncoderRLModel, GaussianEncoderAutoEncoderRLModel
+
+from .byname import model_by_params, register_model
+
+from .cnn import CNNClassifier
+register_model("cnn", CNNClassifier)
+from .ae import AutoEncoder
+register_model("ae", AutoEncoder)
+from .aae import AAE
+register_model("aae", AAE)
+from .vae import VAE
+register_model("vae", VAE)
+from .cvae import CVAE
+register_model("cvae", CVAE)
+from .bvae import BetaVAE
+register_model("bvae", BetaVAE)
+from .cabvae import CyclicalAnnealingBetaVAE
+register_model("cabvae", CyclicalAnnealingBetaVAE)
+from .annealedvae import AnnealedVAE
+register_model("annealedvae", AnnealedVAE)
+from .btcvae import BetaTCVAE
+register_model("btcvae", BetaTCVAE)
+from .dipvae import DIPVAEI, DIPVAEII
+register_model("dipvaei", DIPVAEI)
+register_model("dipvaeii", DIPVAEII)
+from .infovae import MMDVAE
+register_model("infovae", MMDVAE)
+from .factorvae import FactorVAE
+register_model("factorvae", FactorVAE)
+
+from .vitae import VITAE
+register_model("vitae", VITAE)
+from .sigmavae import SigmaVAE
+register_model("sigmavae", SigmaVAE)
+from .dfcvae import DFCVAE
+register_model("dfcvae", DFCVAE)
+from .vladderae import VariationalLadderAutoEncoders
+register_model("vladderae", VariationalLadderAutoEncoders)
+from .guidedvae import GuidedVAE
+register_model("guidedvae", GuidedVAE)
+from .bavae import BetaAnnealedVAE
+register_model("bavae", BetaAnnealedVAE)
+
+from .vaegan import VAEGAN
+register_model("vaegan", VAEGAN)
+from .introvae import IntroVAE
+register_model("introvae", IntroVAE)
+from .sintrovae import SoftIntroVAE
+register_model("sintrovae", SoftIntroVAE)
+from .ali import ALI
+register_model("ali", ALI)
