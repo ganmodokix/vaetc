@@ -40,3 +40,13 @@ vaetc.evaluate(checkpoint)
 
 ## Dataset Cache
 Datasets are downloaded in `$VAETC_PATH` (or `~/.vaetc` in default)
+
+# Citation
+If you use this toolkit, please cite it as below:
+```bibtex
+@misc{
+    title = {{vaetc}: VAE-based Representation Learning Toolkit},
+    author = {Ganmodokix},
+    howpublished = {\url{https://github.com/ganmodokix/vaetc}}
+}
+```
