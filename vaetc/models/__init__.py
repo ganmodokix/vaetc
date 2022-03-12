@@ -49,3 +49,5 @@ from .sintrovae import SoftIntroVAE
 register_model("sintrovae", SoftIntroVAE)
 from .ali import ALI
 register_model("ali", ALI)
+from .avb import AdversarialVariationalBayes
+register_model("avb", AdversarialVariationalBayes)
