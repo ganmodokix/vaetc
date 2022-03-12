@@ -41,7 +41,7 @@ vaetc.evaluate(checkpoint)
 ## Dataset Cache
 Datasets are downloaded in `$VAETC_PATH` (or `~/.vaetc` in default)
 
-# Citation
+## Citation
 If you use this toolkit, please cite it as below:
 ```bibtex
 @misc{
