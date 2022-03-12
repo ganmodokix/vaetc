@@ -10,6 +10,3 @@
 __pycache__
 /docs
 /vaetc_scripts
-
-/aggregate/*
-!/aggregate/*.py
