@@ -60,7 +60,7 @@ class Discriminator(nn.Module):
     def forward(self, x: torch.Tensor, z: torch.Tensor) -> torch.Tensor:
         
         # [1-D(x), D(x)] = [p_fake, p_real]
-        return self.net(torch.cat([self.features(x), z], dim=1))
+        return self.logits(torch.cat([self.features(x), z], dim=1))
 
 class Reparameterizer(nn.Module):
 
@@ -72,9 +72,9 @@ class Reparameterizer(nn.Module):
             nn.SiLU(True),
             nn.Linear(256, 256),
             nn.SiLU(True),
-            nn.Linear(256, 256),
+            nn.Linear(256, z_dim),
             nn.SiLU(True),
-            nn.BatchNorm1d(affine=False),
+            nn.BatchNorm1d(z_dim, affine=False),
         )
 
     def forward(self, eps: torch.Tensor):
@@ -136,7 +136,10 @@ class AdversarialVariationalBayes(VAE):
         z = self.reparameter(mean, logvar)
         x2 = self.decode(z)
 
-        return z, mean, logvar, x2
+        logits_fake = self.disc_block(x, z)
+
+        return z, mean, logvar, x2, logits_fake
+
     def loss(self, x, z, mean, logvar, x2, logits_fake):
 
         # losses
