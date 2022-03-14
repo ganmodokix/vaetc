@@ -1,4 +1,5 @@
-from typing import Optional
+from ctypes import Union
+from typing import Literal, Optional
 
 import math
 
@@ -21,21 +22,25 @@ class SigmaVAE(VAE):
 
         super().__init__(hyperparameters)
 
-        self.log_sigma = nn.Parameter(torch.tensor(0.0), requires_grad=False)
+        self.sigma_method: Union[Literal["optimal"], Literal["trainable"], float]
+        self.sigma_method = hyperparameters.get("sigma", "optimal")
+
+        self.log_sigma = nn.Parameter(torch.tensor(0.0), requires_grad=self.sigma_method == "trainable")
 
     def loss(self, x, z, mean, logvar, x2, progress: Optional[float] = None):
         
         # Optimal σ
         if progress is not None:
-            log_sigma = ((x - x2) ** 2).mean().sqrt().log()
-            log_sigma = softclip(log_sigma, -6)
-            self.log_sigma.data = log_sigma
+            if self.sigma_method == "optimal":
+                log_sigma = ((x - x2) ** 2).mean().sqrt().log()
+                log_sigma = softclip(log_sigma, -6)
+                self.log_sigma.data = log_sigma
 
         # Losses
         loss_ae  = torch.mean(neglogpxz_gaussian(x, x2))
         loss_reg = torch.mean(kl_gaussian(mean, logvar))
 
-        beta = torch.exp(self.log_sigma.data * 2) * 2
+        beta = torch.exp(self.log_sigma * 2) * 2
 
         # Total loss
         loss = loss_ae + loss_reg
