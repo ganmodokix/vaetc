@@ -25,6 +25,7 @@ register_model("dipvaei", DIPVAEI)
 register_model("dipvaeii", DIPVAEII)
 from .infovae import MMDVAE
 register_model("infovae", MMDVAE)
+register_model("wae", MMDVAE)
 from .factorvae import FactorVAE
 register_model("factorvae", FactorVAE)
 
