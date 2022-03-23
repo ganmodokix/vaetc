@@ -73,8 +73,14 @@ def manifold(checkpoint_best: Checkpoint):
     torch.cuda.synchronize()
     torch.cuda.empty_cache()
 
-def explain(checkpoint_best: Checkpoint):
+def sampling(checkpoint_best: Checkpoint):
 
+    if isinstance(checkpoint_best.model, GaussianEncoderAutoEncoderRLModel):
+        debug_print("Sampling data ...")
+        vis.sample.visualize(checkpoint_best)
+    else:
+        debug_print("Generative Sampling skipped; no generative model")
+    
     torch.cuda.synchronize()
     torch.cuda.empty_cache()
 
@@ -110,7 +116,7 @@ def visualize(
         reconstruction(checkpoint_best)
         marginal_distribution(checkpoint_best)
         manifold(checkpoint_best)
-        explain(checkpoint_best)
+        sampling(checkpoint_best)
     
     if quantitative:
         metrics(checkpoint_best)
