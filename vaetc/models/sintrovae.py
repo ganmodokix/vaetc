@@ -56,8 +56,8 @@ class SoftIntroVAE(VAE):
         xf = self.decode(zf)
         mean2f, logvar2f = self.encode_gauss(x2.detach())
         meanff, logvarff = self.encode_gauss(xf.detach())
-        z2f = reparameterize(mean2f, logvar2f)
-        zff = reparameterize(meanff, logvarff)
+        z2f = self.reparameterize(mean2f, logvar2f)
+        zff = self.reparameterize(meanff, logvarff)
         x2f = self.decode(z2f)
         xff = self.decode(zff)
 
@@ -87,8 +87,8 @@ class SoftIntroVAE(VAE):
         xf = self.decode(zf)
         mean2f, logvar2f = self.encode_gauss(x2.detach())
         meanff, logvarff = self.encode_gauss(xf.detach())
-        z2f = reparameterize(mean2f, logvar2f)
-        zff = reparameterize(meanff, logvarff)
+        z2f = self.reparameterize(mean2f, logvar2f)
+        zff = self.reparameterize(meanff, logvarff)
         x2f = self.decode(z2f.detach())
         xff = self.decode(zff.detach())
 

@@ -71,7 +71,7 @@ class LadderVAE(VAE):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 
         mean, logvar = self.encode_gauss(x)
-        z = reparameterize(mean, logvar)
+        z = self.reparameterize(mean, logvar)
         x2 = self.decode(z)
 
         return z, mean, logvar, x2

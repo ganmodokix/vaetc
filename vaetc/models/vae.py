@@ -41,10 +41,15 @@ class VAE(GaussianEncoderAutoEncoderRLModel):
 
         return self.dec_block(x)
 
+    def sample_prior(self, batch_size: int) -> torch.Tensor:
+        
+        z = torch.randn(size=[batch_size, self.z_dim], device=self.device)
+        return z
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 
         mean, logvar = self.encode_gauss(x)
-        z = reparameterize(mean, logvar)
+        z = self.reparameterize(mean, logvar)
         x2 = self.decode(z)
 
         return z, mean, logvar, x2

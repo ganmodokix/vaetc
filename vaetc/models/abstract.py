@@ -116,6 +116,24 @@ class GaussianEncoderAutoEncoderRLModel(AutoEncoderRLModel):
 
         raise NotImplementedError()
 
+    def reparameterize(self, mean, logvar):
+        """ Apply the reparameterization trick
+
+        Args:
+            mean (torch.Tensor): μ in the encoder output
+            mean (torch.Tensor): logσ^2 in the encoder output
+
+        Returns:
+            torch.Tensor: z
+        """
+        
+        if REPARAMETERIZE_GAUSS_IN_ENCODE:
+            z = reparameterize(mean, logvar)
+        else:
+            z = mean
+
+        return z
+
     def encode(self, *args: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """ Encode and sample :math:`\\mathbf{z}` by the reparameterization trick (https://arxiv.org/abs/1312.6114).
 
@@ -130,10 +148,6 @@ class GaussianEncoderAutoEncoderRLModel(AutoEncoderRLModel):
         """
 
         mean, logvar = self.encode_gauss(*args)
-        
-        if REPARAMETERIZE_GAUSS_IN_ENCODE:
-            z = reparameterize(mean, logvar)
-        else:
-            z = mean
+        z = self.reparameterize(mean, logvar)
 
         return z

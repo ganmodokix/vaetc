@@ -8,7 +8,6 @@ from torch.nn import functional as F
 
 from .vae import VAE
 from vaetc.data.utils import IMAGE_SHAPE
-from vaetc.network.reparam import reparameterize
 from vaetc.network.losses import kl_gaussian, neglogpxz_gaussian
 from vaetc.network.cnn import ConvDecoder, ConvGaussianEncoder
 
@@ -121,9 +120,9 @@ class ALI(VAE):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 
         mean, logvar = self.encode_gauss(x)
-        z = reparameterize(mean, logvar)
+        z = self.reparameterize(mean, logvar)
 
-        zp = torch.randn_like(z)
+        zp = self.sample_prior(z.shape[0])
         xpmean = self.decode(zp)
         # xp = xpmean + torch.randn_like(x)
         xp = xpmean # p(x|z) is degenerate because of stability

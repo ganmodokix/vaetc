@@ -76,7 +76,7 @@ class VITAE(VAE):
         zs = []
         x2s = []
         for i in range(self.num_sampling):
-            z = reparameterize(mean, logvar)
+            z = self.reparameterize(mean, logvar)
             x2 = self.decode(z)
             zs.append(z)
             x2s.append(x2)

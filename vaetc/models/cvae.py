@@ -62,7 +62,7 @@ class CVAE(GaussianEncoderAutoEncoderRLModel):
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
 
         mean, logvar = self.encode_gauss(x, t)
-        z = reparameterize(mean, logvar)
+        z = self.reparameterize(mean, logvar)
         x2 = self.decode(z, t)
 
         return z, mean, logvar, x2
