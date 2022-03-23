@@ -34,7 +34,7 @@ def encode_set(model: RLModel, dataset: Dataset, batch_size: int):
         
         if is_gaussian:
             mean, logvar = model.encode_gauss(x)
-            z = mean + (logvar * 0.5).exp() * torch.randn_like(logvar)
+            z = model.reparameterize(mean, logvar)
         else:
             z = model.encode(x)
             mean, logvar = None, None
