@@ -89,7 +89,7 @@ def very_verbose_output(checkpoint: Checkpoint, epoch: int):
 
     if isinstance(checkpoint.model, GaussianEncoderAutoEncoderRLModel):
         debug_print("Sampling images...")
-        vis.reconstruction.visualize(checkpoint, reconstruction_path=f"verbose/samples_{epoch:04d}.png")
+        vis.sample.visualize(checkpoint, out_path=f"verbose/samples_{epoch:04d}.png")
     else:
         debug_print("Sampling skipped; no decoder")
 
