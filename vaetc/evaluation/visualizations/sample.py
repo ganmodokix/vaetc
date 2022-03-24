@@ -10,7 +10,7 @@ def visualize(checkpoint: Checkpoint, out_path: str = "samples.png", rows=16, co
 
     with torch.no_grad():
         
-        if checkpoint.model.__dict__["sample_prior"]:
+        if "sample_prior" in checkpoint.model.__dict__:
             z = checkpoint.model.sample_prior(rows * cols)
         else:
             z = torch.randn([rows * cols, checkpoint.model.z_dim]).cuda()
