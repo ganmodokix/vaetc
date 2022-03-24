@@ -26,5 +26,5 @@ def visualize(checkpoint: Checkpoint, out_path: str = "samples.png", rows=16, co
     img = (img * 255).astype(np.uint8)
 
     out_path = os.path.join(checkpoint.options["logger_path"], out_path)
-    cv2.imwrite(img, out_path)
+    cv2.imwrite(out_path, img)
 
