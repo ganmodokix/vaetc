@@ -15,7 +15,7 @@ import torchinfo
 from .data.utils import IMAGE_SHAPE, IMAGE_HEIGHT, IMAGE_WIDTH
 from .utils import debug_print, mean_dict
 from .checkpoint import Checkpoint
-from .models import RLModel, AutoEncoderRLModel
+from .models import RLModel, AutoEncoderRLModel, GaussianEncoderAutoEncoderRLModel
 from .evaluation import visualizations as vis
 
 def non_deterministic():
@@ -83,6 +83,15 @@ def very_verbose_output(checkpoint: Checkpoint, epoch: int):
         vis.reconstruction.visualize(checkpoint, reconstruction_path=f"verbose/reconstruction_{epoch:04d}.png")
     else:
         debug_print("Reconstructions skipped; no decoder")
+
+    torch.cuda.synchronize()
+    torch.cuda.empty_cache()
+
+    if isinstance(checkpoint.model, GaussianEncoderAutoEncoderRLModel):
+        debug_print("Sampling images...")
+        vis.reconstruction.visualize(checkpoint, reconstruction_path=f"verbose/samples_{epoch:04d}.png")
+    else:
+        debug_print("Sampling skipped; no decoder")
 
     torch.cuda.synchronize()
     torch.cuda.empty_cache()
