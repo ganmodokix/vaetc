@@ -19,10 +19,10 @@ def visualize(checkpoint: Checkpoint, out_path: str = "samples.png", rows=16, co
 
         img = x2.detach().cpu().numpy()
     
-    img = np.reshape(img, [rows, cols, *img.shape[1:]])
-    img = np.concatenate(img, axis=0)
-    img = np.concatenate(img, axis=0)
     img = np.transpose(img, [0, 2, 3, 1])[...,::-1]
+    img = np.reshape(img, [rows, cols, *img.shape[1:]])
+    img = np.concatenate(img, axis=1)
+    img = np.concatenate(img, axis=1)
     img = (img * 255).astype(np.uint8)
 
     out_path = os.path.join(checkpoint.options["logger_path"], out_path)
