@@ -9,10 +9,11 @@ import torch
 
 from vaetc.checkpoint import Checkpoint
 from vaetc.utils import write_video
+from vaetc.models.abstract import AutoEncoderRLModel, GaussianEncoderAutoEncoderRLModel
 
-def render(options, model, i: int, n: int = 15, radius: float = 3.0):
+def render(options, model: AutoEncoderRLModel, i: int, n: int = 15, radius: float = 3.0):
 
-    if "decode" in model.__dict__:
+    if not hasattr(model, "decode"):
         raise ValueError("The model has no decoder")
 
     model.eval()
@@ -20,7 +21,12 @@ def render(options, model, i: int, n: int = 15, radius: float = 3.0):
     hyperparameters = yaml.safe_load(options["hyperparameters"])
     l = hyperparameters["z_dim"]
     
-    z = np.zeros(shape=(n, l))
+    if hasattr(model, "sample_prior"):
+        z_mean = model.sample_prior(256).mean(dim=0).detach().cpu().numpy()
+        z = np.tile(z_mean[None,:], [n, 1])
+    else:
+        z = np.zeros(shape=(n, l))
+    
     z[:,i] = np.linspace(-radius, radius, n)
     
     with torch.no_grad():

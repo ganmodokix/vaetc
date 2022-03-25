@@ -5,12 +5,18 @@ import torch
 import cv2
 
 from vaetc.checkpoint import Checkpoint
+from vaetc.models.abstract import GaussianEncoderAutoEncoderRLModel
+from vaetc.utils.debug import debug_print
 
 def visualize(checkpoint: Checkpoint, out_path: str = "samples.png", rows=16, cols=16):
 
+    if not hasattr(checkpoint.model, "sample_prior"):
+        debug_print("Skipped; no prior")
+        return
+
     with torch.no_grad():
-        
-        if "sample_prior" in checkpoint.model.__dict__:
+
+        if isinstance(checkpoint.model, GaussianEncoderAutoEncoderRLModel):
             z = checkpoint.model.sample_prior(rows * cols)
         else:
             z = torch.randn([rows * cols, checkpoint.model.z_dim]).cuda()
