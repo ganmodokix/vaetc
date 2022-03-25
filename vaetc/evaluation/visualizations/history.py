@@ -8,8 +8,6 @@ from vaetc.checkpoint import Checkpoint
 
 def visualize(checkpoint: Checkpoint):
 
-    checkpoint.model.eval()
-
     history_dir = os.path.join(checkpoint.options["logger_path"], "history")
     os.makedirs(history_dir, exist_ok=True)
     for key in checkpoint.history:

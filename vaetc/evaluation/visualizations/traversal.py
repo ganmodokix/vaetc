@@ -16,8 +16,6 @@ def render(options, model: AutoEncoderRLModel, i: int, n: int = 15, radius: floa
     if not hasattr(model, "decode"):
         raise ValueError("The model has no decoder")
 
-    model.eval()
-
     hyperparameters = yaml.safe_load(options["hyperparameters"])
     l = hyperparameters["z_dim"]
     

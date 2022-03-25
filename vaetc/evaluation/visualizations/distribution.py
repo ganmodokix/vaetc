@@ -25,8 +25,6 @@ def render(checkpoint: Checkpoint):
         num_workers=os.cpu_count() - 1,
         pin_memory=True)
 
-    checkpoint.model.eval()
-
     if isinstance(checkpoint.model, GaussianEncoderAutoEncoderRLModel):
 
         means = []

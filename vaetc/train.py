@@ -69,6 +69,8 @@ def very_verbose_output(checkpoint: Checkpoint, epoch: int):
 
     os.makedirs(os.path.join(checkpoint.options["logger_path"], "verbose"), exist_ok=True)
 
+    checkpoint.model.eval()
+
     if isinstance(checkpoint.model, AutoEncoderRLModel):
         debug_print("Plotting latent traversals...")
         vis.traversal.visualize(checkpoint, traversal_path=f"verbose/traversal_{epoch:04d}.png")
@@ -163,6 +165,8 @@ def validate_one_epoch(checkpoint: Checkpoint, loader_valid: DataLoader) -> dict
     """
 
     history_steps = []
+
+    checkpoint.model.eval()
 
     for batch in tqdm(loader_valid, desc="valid"):
 

@@ -13,8 +13,6 @@ def render(loader, model):
     if "decode" in model.__dict__:
         raise ValueError("The model has no decoder")
 
-    model.eval()
-
     with torch.no_grad():
 
         x, t = loader.__iter__().next()

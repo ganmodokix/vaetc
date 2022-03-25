@@ -33,8 +33,6 @@ def render(checkpoint: Checkpoint, n: int = 10):
         shuffle=False,
         num_workers=os.cpu_count() - 1)
 
-    checkpoint.model.eval()
-
     with torch.no_grad():
 
         x, t = loader.__iter__().next()
