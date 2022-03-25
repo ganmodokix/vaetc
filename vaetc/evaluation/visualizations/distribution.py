@@ -176,10 +176,10 @@ def visualize(checkpoint: Checkpoint, i_scatter=None, j_scatter=None, figsize=(6
     std_i_broad = np.std(z[:,i_broad])
     std_j_broad = np.std(z[:,j_broad])
     r = np.max([
-        np.abs(mean_i_broad - std_i_broad),
-        np.abs(mean_i_broad + std_i_broad),
-        np.abs(mean_j_broad - std_j_broad),
-        np.abs(mean_j_broad + std_j_broad),
+        np.abs(mean_i_broad - std_i_broad * 3),
+        np.abs(mean_i_broad + std_i_broad * 3),
+        np.abs(mean_j_broad - std_j_broad * 3),
+        np.abs(mean_j_broad + std_j_broad * 3),
     ])
     r = float(r)
     zlim = [-r, r]
