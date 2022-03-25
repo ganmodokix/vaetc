@@ -108,6 +108,9 @@ def visualize(
     if checkpoint_last is None:
         checkpoint_last = checkpoint_best
 
+    checkpoint_best.model.eval()
+    checkpoint_last.model.eval()
+
     if logging:
         options(checkpoint_last)
         history(checkpoint_best, checkpoint_last)
