@@ -130,9 +130,6 @@ def visualize(checkpoint: Checkpoint, i_scatter=None, j_scatter=None, figsize=(6
     num_data, z_dim = z.shape
     num_data, t_dim = t.shape
 
-    r = float(np.max(np.abs(z)))
-    zlim = [-r, r]
-
     # plot empirical latent distributions
     density_path = os.path.join(logger_path, "density")
     os.makedirs(density_path, exist_ok=True)
@@ -173,6 +170,19 @@ def visualize(checkpoint: Checkpoint, i_scatter=None, j_scatter=None, figsize=(6
             i_broad, j_broad = var_rank[-1], var_rank[-2]
     else:
         i_broad, j_broad = i_scatter, j_scatter
+
+    mean_i_broad = np.mean(z[:,i_broad])
+    mean_j_broad = np.mean(z[:,j_broad])
+    std_i_broad = np.std(z[:,i_broad])
+    std_j_broad = np.std(z[:,j_broad])
+    r = np.max([
+        np.abs(mean_i_broad - std_i_broad),
+        np.abs(mean_i_broad + std_i_broad),
+        np.abs(mean_j_broad - std_j_broad),
+        np.abs(mean_j_broad + std_j_broad),
+    ])
+    r = float(r)
+    zlim = [-r, r]
 
     # visualize scatters of z_0 and z_1
     if is_gaussian:
