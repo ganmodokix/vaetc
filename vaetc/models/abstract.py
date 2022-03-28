@@ -4,7 +4,7 @@ from torch import nn
 
 from vaetc.network.reparam import reparameterize
 
-REPARAMETERIZE_GAUSS_IN_ENCODE = False
+REPARAMETERIZE_GAUSS_IN_ENCODE = True
 class RLModel(nn.Module):
     """ The abstract class of representation learning models with at least an encoder.
 
