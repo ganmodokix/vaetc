@@ -18,7 +18,6 @@ def visualize(checkpoint: Checkpoint, out_path: str = "samples.png", rows=16, co
 
         if isinstance(checkpoint.model, GaussianEncoderAutoEncoderRLModel):
             z = checkpoint.model.sample_prior(rows * cols)
-            print(z)
         else:
             z = torch.randn([rows * cols, checkpoint.model.z_dim]).cuda()
         
