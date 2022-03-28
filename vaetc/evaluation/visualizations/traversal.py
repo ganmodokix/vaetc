@@ -11,7 +11,7 @@ from vaetc.checkpoint import Checkpoint
 from vaetc.utils import write_video
 from vaetc.models.abstract import AutoEncoderRLModel, GaussianEncoderAutoEncoderRLModel
 
-def render(options, model: AutoEncoderRLModel, i: int, n: int = 15, radius: float = 3.0):
+def render(options, model: AutoEncoderRLModel, i: int, n: int = 15, radius: float = 3.0, z_center = None):
 
     if not hasattr(model, "decode"):
         raise ValueError("The model has no decoder")
@@ -19,11 +19,10 @@ def render(options, model: AutoEncoderRLModel, i: int, n: int = 15, radius: floa
     hyperparameters = yaml.safe_load(options["hyperparameters"])
     l = hyperparameters["z_dim"]
     
-    if hasattr(model, "sample_prior"):
-        z_mean = model.sample_prior(256).mean(dim=0).detach().cpu().numpy()
-        z = np.tile(z_mean[None,:], [n, 1])
-    else:
+    if z_center is None:
         z = np.zeros(shape=(n, l))
+    else:
+        z = np.tile(z_center[None,:], [n, 1])
     
     z[:,i] = np.linspace(-radius, radius, n)
     
@@ -49,9 +48,14 @@ def visualize(checkpoint: Checkpoint, traversal_path: str = "traversal.png"):
 
     hyperparameters = yaml.safe_load(checkpoint.options["hyperparameters"])
 
+    if hasattr(checkpoint.model, "sample_prior"):
+        z_center = checkpoint.model.sample_prior(256).mean(dim=0).detach().cpu().numpy()
+    else:
+        z_center = None
+
     traversals = []
     for i in tqdm(range(hyperparameters["z_dim"])):
-        traversals += [render(checkpoint.options, checkpoint.model, i)]
+        traversals += [render(checkpoint.options, checkpoint.model, i, z_center=z_center)]
     
     img = np.concatenate(traversals, axis=1)
     img = (img.transpose(1, 2, 0)[...,::-1] * 255).astype(np.uint8)
