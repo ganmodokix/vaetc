@@ -7,6 +7,9 @@ from vaetc.network.cnn import ConvEncoder, ConvDecoder
 from vaetc.models.utils import detach_dict
 
 class DAGMM(AutoEncoderRLModel):
+    """ DAGMM [Zong+, ICLR 2018]
+    (https://openreview.net/forum?id=BJJLHbb0-)
+    """
 
     def __init__(self, hyperparameters: dict):
         super().__init__(hyperparameters)
