@@ -33,7 +33,7 @@ class ScatterFigure:
 
         self.sns_style = "whitegrid"
         self.sns_context = "notebook"
-        self.sns_palette = "bright"
+        self.sns_palette = "colorblind"
 
         self.figure: Optional[Figure] = None
 
@@ -108,7 +108,7 @@ def scatter(
                     path_collection = ax.scatter(x=zi, y=zj, c=np.argmax(data.t[indices], axis=1), cmap="rainbow")
                 else:
                     c = data.t[indices,target_k]
-                    path_collection = ax.scatter(x=zi, y=zj, c=c, cmap="coolwarm")
+                    path_collection = ax.scatter(x=zi, y=zj, c=c, cmap="coolwarm", vmin=0, vmax=1)
             else:
                 if data.mean is not None:
                     meani   = data.mean  [indices,i]
@@ -134,7 +134,7 @@ def scatter(
 
         if target_k is not None:
             sf.figure.set_size_inches(7, 6)
-            sf.figure.colorbar(path_collection, ax=ax, ticks=np.linspace(0., 1., 6))
+            sf.figure.colorbar(path_collection, ax=ax)
 
 def scatter_all(
     data: EncodedData,
