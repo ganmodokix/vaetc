@@ -52,3 +52,5 @@ from .ali import ALI
 register_model("ali", ALI)
 from .avb import AdversarialVariationalBayes
 register_model("avb", AdversarialVariationalBayes)
+from .dagmm import DAGMM
+register_model("dagmm", DAGMM)
