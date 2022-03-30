@@ -164,21 +164,27 @@ def scatter_all(
     
     for i, j, k in tqdm(ijk):
 
-        if target_colormap and not isinstance(t_interest, str):
-            # k is from list
+        if target_colormap:
 
-            out_name = f"scatter_z{i:03d}_z{j:03d}_t{k:03d}"
-            scatter(data, indices, i, j, os.path.join(out_dir, out_name), kde=kde, target_k=k)
+            if not isinstance(t_interest, str):
+                # k is from list
 
-        elif target_colormap == "categorical":
-            # k is dummy; target is categorical
+                out_name = f"scatter_z{i:03d}_z{j:03d}_t{k:03d}"
+                scatter(data, indices, i, j, os.path.join(out_dir, out_name), kde=kde, target_k=k)
 
-            out_name = f"scatter_z{i:03d}_z{j:03d}"
-            scatter(data, indices, i, j, os.path.join(out_dir, out_name), kde=kde, target_k="categorical")
+            elif t_interest == "categorical":
+                # k is dummy; target is categorical
+
+                out_name = f"scatter_z{i:03d}_z{j:03d}"
+                scatter(data, indices, i, j, os.path.join(out_dir, out_name), kde=kde, target_k="categorical")
+
+            else:
+
+                raise ValueError(f"Invalid t_interest {t_interest}")
 
         else:
-            # no target visualization
 
+            # no target visualization
             out_name = f"scatter_z{i:03d}_z{j:03d}"
             scatter(data, indices, i, j, os.path.join(out_dir, out_name), kde=kde)
 

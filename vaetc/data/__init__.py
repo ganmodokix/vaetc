@@ -21,6 +21,7 @@ from .shapes3d import shapes3d
 from .mpi3d import mpi3d_real
 from .smallnorb import smallnorb
 from .teapot import teapot
+from .coil20 import coil20
 
 from .afhq import afhq_v2_cat, afhq_v2_dog, afhq_v2_wild
 from .ffhq import ffhq

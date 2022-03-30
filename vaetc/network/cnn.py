@@ -64,7 +64,17 @@ class ConvGaussianEncoder(ConvEncoder):
 
         super().__init__(z_dim, in_features, batchnorm, inplace, resblock)
 
-        self.fc_logvar = nn.Linear(256, self.z_dim)
+        if batchnorm:
+            self.fc = nn.Sequential(
+                nn.Linear(256, self.z_dim),
+                nn.BatchNorm1d(self.z_dim),
+            )
+            self.fc_logvar = nn.Sequential(
+                nn.Linear(256, self.z_dim),
+                nn.BatchNorm1d(self.z_dim),
+            )
+        else:
+            self.fc_logvar = nn.Linear(256, self.z_dim)
 
     def forward(self, x: torch.Tensor):
 
