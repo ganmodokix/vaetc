@@ -27,13 +27,16 @@ class FFHQThumbnails(Dataset):
         if download and self._download_required():
             self._download()
         
-        with open(os.path.join(self.root_path, "ffhq-dataset-v2.json"), "r", encoding="utf8") as fp:
+        metadata_path = os.path.join(self.root_path, "ffhq-dataset-v2.json")
+        metadata_size = os.path.getsize(metadata_path)
+        with open(metadata_path, "r", encoding="utf8") as fp:
             
             debug_print("Loading metadata...")
             json_str = ""
-            with tqdm() as pbar:
+            chunk_size = 2 ** 14
+            with tqdm(total=(metadata_size + chunk_size - 1) // chunk_size) as pbar:
                 while True:
-                    chunk = fp.read(4096)
+                    chunk = fp.read(chunk_size)
                     if len(chunk) == 0:
                         break
                     json_str += chunk
