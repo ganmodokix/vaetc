@@ -1,9 +1,11 @@
 import itertools
 import os
+import gc
+from typing import Iterable, Literal, Optional, Union
+
 import cv2
 from tqdm import tqdm
 
-from typing import Optional, Union
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
@@ -75,6 +77,65 @@ def scatter_gaussian(ax: Axes,
 
     return ax
 
+def scatter(
+    data: EncodedData,
+    indices: Iterable[int],
+    i: int, j: int,
+    out_name: str,
+    kde: bool = False,
+    target_k: Union[int,Literal["categorical"],None] = None,
+):
+
+    with ScatterFigure(out_name) as sf:
+
+        ax = sf.ax(1, 1, 1)
+        ax.set_xlabel(f"$z_{{{i}}}$")
+        ax.set_ylabel(f"$z_{{{j}}}$")
+
+        zi = data.z[indices,i]
+        zj = data.z[indices,j]
+
+        xmin = np.min(zi)
+        xmax = np.max(zi)
+        ymin = np.min(zj)
+        ymax = np.max(zj)
+
+        if kde:
+            sns.kdeplot(x=zi, y=zj, fill=True, ax=ax)
+        else:
+            if target_k is not None:
+                if target_k == "categorical":
+                    path_collection = ax.scatter(x=zi, y=zj, c=np.argmax(data.t[indices], axis=1), cmap="rainbow")
+                else:
+                    c = data.t[indices,target_k]
+                    path_collection = ax.scatter(x=zi, y=zj, c=c, cmap="coolwarm")
+            else:
+                if data.mean is not None:
+                    meani   = data.mean  [indices,i]
+                    logvari = data.logvar[indices,i]
+                    meanj   = data.mean  [indices,j]
+                    logvarj = data.logvar[indices,j]
+                    scatter_gaussian(ax, meani, logvari, meanj, logvarj)
+                    xmin = np.min(meani - np.exp(logvari * 0.5) * 3)
+                    xmax = np.max(meani + np.exp(logvari * 0.5) * 3)
+                    ymin = np.min(meanj - np.exp(logvarj * 0.5) * 3)
+                    ymax = np.max(meanj + np.exp(logvarj * 0.5) * 3)
+                else:
+                    path_collection = ax.scatter(x=zi, y=zj)
+
+        # 5% of margin
+        margin_ratio = 0.05
+        margin_x = max(0.01, xmax - xmin) * margin_ratio
+        margin_y = max(0.01, ymax - ymin) * margin_ratio
+        xmin, xmax = xmin - margin_x, xmax + margin_x
+        ymin, ymax = ymin - margin_y, ymax + margin_y
+        ax.set_xlim([xmin, xmax])
+        ax.set_ylim([ymin, ymax])
+
+        if target_k is not None:
+            sf.figure.set_size_inches(7, 6)
+            sf.figure.colorbar(path_collection, ax=ax, ticks=np.linspace(0., 1., 6))
+
 def scatter_all(
     data: EncodedData,
     out_dir: str,
@@ -104,54 +165,22 @@ def scatter_all(
     for i, j, k in tqdm(ijk):
 
         if target_colormap and not isinstance(t_interest, str):
+            # k is from list
+
             out_name = f"scatter_z{i:03d}_z{j:03d}_t{k:03d}"
-        else:
+            scatter(data, indices, i, j, os.path.join(out_dir, out_name), kde=kde, target_k=k)
+
+        elif target_colormap == "categorical":
+            # k is dummy; target is categorical
+
             out_name = f"scatter_z{i:03d}_z{j:03d}"
+            scatter(data, indices, i, j, os.path.join(out_dir, out_name), kde=kde, target_k="categorical")
 
-        with ScatterFigure(os.path.join(out_dir, out_name)) as sf:
+        else:
+            # no target visualization
 
-            ax = sf.ax(1, 1, 1)
-            ax.set_xlabel(f"$z_{{{i}}}$")
-            ax.set_ylabel(f"$z_{{{j}}}$")
-
-            zi = data.z[indices,i]
-            zj = data.z[indices,j]
-
-            xmin = np.min(zi)
-            xmax = np.max(zi)
-            ymin = np.min(zj)
-            ymax = np.max(zj)
-
-            if kde:
-                sns.kdeplot(x=zi, y=zj, fill=True, ax=ax)
-            else:
-                if target_colormap:
-                    if isinstance(t_interest, str) and t_interest == "categorical":
-                        ax.scatter(x=zi, y=zj, c=np.argmax(data.t[indices], axis=1), cmap="rainbow")
-                    else:
-                        ax.scatter(x=zi, y=zj, c=data.t[indices,k], cmap="coolwarm")
-                else:
-                    if data.mean is not None:
-                        meani   = data.mean  [indices,i]
-                        logvari = data.logvar[indices,i]
-                        meanj   = data.mean  [indices,j]
-                        logvarj = data.logvar[indices,j]
-                        scatter_gaussian(ax, meani, logvari, meanj, logvarj)
-                        xmin = np.min(meani - np.exp(logvari * 0.5) * 3)
-                        xmax = np.max(meani + np.exp(logvari * 0.5) * 3)
-                        ymin = np.min(meanj - np.exp(logvarj * 0.5) * 3)
-                        ymax = np.max(meanj + np.exp(logvarj * 0.5) * 3)
-                    else:
-                        ax.scatter(x=zi, y=zj)
-
-            # 5% of margin
-            margin_ratio = 0.05
-            margin_x = max(0.01, xmax - xmin) * margin_ratio
-            margin_y = max(0.01, ymax - ymin) * margin_ratio
-            xmin, xmax = xmin - margin_x, xmax + margin_x
-            ymin, ymax = ymin - margin_y, ymax + margin_y
-            ax.set_xlim([xmin, xmax])
-            ax.set_ylim([ymin, ymax])
+            out_name = f"scatter_z{i:03d}_z{j:03d}"
+            scatter(data, indices, i, j, os.path.join(out_dir, out_name), kde=kde)
 
 def top_k_interesting_latents(data: EncodedData, k: int):
 
@@ -164,22 +193,28 @@ def top_k_interesting_targets(data: EncodedData, k: int):
     zstd = data.t.std(axis=0)
     return np.argsort(zstd)[::-1][:k]
 
-def probably_categorical(data: EncodedData):
+def probably_binary(t: np.ndarray, eps=1e-3):
 
-    EPS = 1e-3
+    d = np.max(np.minimum(np.abs(t), np.abs(1. - t)))
+    return d < eps
+
+def probably_categorical(data: EncodedData, eps=1e-3):
+
+    if not probably_binary(data.t, eps):
+        return False
 
     if data.t_dim() < 2:
         return False
 
     d = np.max(np.minimum(data.t, 1. - data.t))
-    if d >= EPS:
+    if d >= eps:
         return False
     
     indices = np.argsort(data.t, axis=1)
     best = data.t[np.arange(data.num_data()), indices[:,-1]]
     second = data.t[np.arange(data.num_data()), indices[:,-2]]
     disc = best - second
-    return bool(1. - np.min(disc) < EPS)
+    return bool(1. - np.min(disc) < eps)
 
 def marginal_plot(z: np.ndarray, density_path: str):
 
@@ -250,7 +285,7 @@ def visualize(checkpoint: Checkpoint):
     if probably_categorical(data):
         t_interest = "categorical"
     else:
-        t_interest = top_k_interesting_targets(data, 10)
+        t_interest = top_k_interesting_targets(data, 20)
 
     scatter_all(
         data, os.path.join(checkpoint.options["logger_path"], "scatter"),
@@ -275,5 +310,7 @@ def visualize(checkpoint: Checkpoint):
                 out_dir=out_dir)
 
     del data
+    gc.collect()
+
     torch.cuda.synchronize()
     torch.cuda.empty_cache()

@@ -14,8 +14,7 @@ if __name__ == "__main__":
 
     checkpoint = vaetc.Checkpoint(options={
         "model_name": "vae",
-        "dataset": "shapes3d",
-        "epochs": 100,
+        "dataset": "mnist",
         "batch_size": 256,
         "logger_path": "runs.tests/current",
         "hyperparameters": yaml.safe_dump({
@@ -24,8 +23,9 @@ if __name__ == "__main__":
         }),
         "cuda_sync": True,
         "very_verbose": True,
-        "until_convergence": True,
-        "patience": 10,
+        "epochs": 1,
+        # "until_convergence": True,
+        # "patience": 10,
     })
 
     vaetc.fit(checkpoint)

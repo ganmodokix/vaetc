@@ -1,3 +1,4 @@
+import gc
 import os
 from typing import Dict, List, Optional
 from matplotlib.colors import NoNorm
@@ -194,5 +195,8 @@ def evaluate(checkpoint: Checkpoint):
     logger_path = checkpoint.options["logger_path"]
 
     measure(checkpoint.model, checkpoint.dataset.validation_set, logger_path, "valid")
+    gc.collect()
+
     measure(checkpoint.model, checkpoint.dataset.test_set, logger_path, "test")
+    gc.collect()
     

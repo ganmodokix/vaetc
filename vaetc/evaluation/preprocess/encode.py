@@ -117,6 +117,16 @@ class EncodedData:
         self.logvars = logvars
         self.x2s = x2s
 
+        debug_print(f"Encoded Data {hex(id(self))} created")
+
+    def __del__(self):
+        
+        for key in self.__dict__.keys():
+            if isinstance(self.__dict__[key], np.ndarray):
+                self.__dict__[key] = None
+        
+        debug_print(f"Encoded Data {hex(id(self))} deleted")
+
     def iter_batch(self):
         return zip(self.xs, self.ts, self.zs, self.means, self.logvars, self.x2s)
 
