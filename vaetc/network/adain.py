@@ -49,13 +49,13 @@ class AdaptiveInstanceNorm2d(nn.Module):
 
 class AdainDecoder(nn.Module):
     
-    def __init__(self, z_dim: int) -> None:
+    def __init__(self, z_dim: int, mapping_network=True) -> None:
         super().__init__()
 
         self.z_dim = int(z_dim)
         assert self.z_dim > 0
 
-        style_dim = 256
+        style_dim = 256 if mapping_network else self.z_dim
 
         self.dec_tensor = nn.Parameter(torch.randn(size=[256, 4, 4]), requires_grad=True)
         self.dec_adains = nn.ModuleList([
@@ -112,23 +112,26 @@ class AdainDecoder(nn.Module):
             ),
         ])
 
-        self.style_net = nn.Sequential(
-            nn.Linear(z_dim, 256),
-            nn.SiLU(True),
-            nn.Linear(256, 256),
-            nn.SiLU(True),
-            nn.Linear(256, 256),
-            nn.SiLU(True),
-            nn.Linear(256, 256),
-            nn.SiLU(True),
-            nn.Linear(256, 256),
-            nn.SiLU(True),
-            nn.Linear(256, 256),
-            nn.SiLU(True),
-            nn.Linear(256, 256),
-            nn.SiLU(True),
-            nn.Linear(256, style_dim),
-        )
+        if mapping_network:
+            self.style_net = nn.Sequential(
+                nn.Linear(z_dim, 256),
+                nn.SiLU(True),
+                nn.Linear(256, 256),
+                nn.SiLU(True),
+                nn.Linear(256, 256),
+                nn.SiLU(True),
+                nn.Linear(256, 256),
+                nn.SiLU(True),
+                nn.Linear(256, 256),
+                nn.SiLU(True),
+                nn.Linear(256, 256),
+                nn.SiLU(True),
+                nn.Linear(256, 256),
+                nn.SiLU(True),
+                nn.Linear(256, style_dim),
+            )
+        else:
+            self.style_net = nn.Identity()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 

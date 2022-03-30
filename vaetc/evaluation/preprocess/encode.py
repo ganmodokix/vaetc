@@ -131,3 +131,6 @@ class EncodedData:
 
     def t_dim(self):
         return self.t.shape[1]
+
+    def num_data(self):
+        return self.z.shape[0]

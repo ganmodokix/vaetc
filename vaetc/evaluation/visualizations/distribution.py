@@ -1,137 +1,190 @@
+import itertools
 import os
+import cv2
+from tqdm import tqdm
+
+from typing import Optional, Union
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
-from matplotlib import patches
+from matplotlib import cm, patches, style
 import seaborn as sns
-from tqdm import tqdm
 
 import torch
 from torch.utils.data import DataLoader, Subset
 
 from vaetc.checkpoint import Checkpoint
 from vaetc.models import GaussianEncoderAutoEncoderRLModel
+from vaetc.evaluation.preprocess import EncodedData
+from vaetc.models.abstract import AutoEncoderRLModel
+from vaetc.utils.debug import debug_print
 
-def render(checkpoint: Checkpoint):
-    
-    test_set = checkpoint.dataset.test_set
+class ScatterFigure:
 
-    n = min(2048, len(test_set))
-    loader_test = DataLoader(
-        dataset=Subset(test_set, range(n)),
-        batch_size=32,
-        shuffle=False,
-        num_workers=os.cpu_count() - 1,
-        pin_memory=True)
+    def __init__(self, out_name: str) -> None:
+        """ out_name: *without* ext """
 
-    if isinstance(checkpoint.model, GaussianEncoderAutoEncoderRLModel):
+        self.out_name = out_name
 
-        means = []
-        logvars = []
-        ts = []
+        self.sns_style = "whitegrid"
+        self.sns_context = "notebook"
+        self.sns_palette = "bright"
 
-        with torch.no_grad():
+        self.figure: Optional[Figure] = None
 
-            for x, t in loader_test:
-                
-                x = x.to(checkpoint.model.device)
-                mean, logvar = checkpoint.model.encode_gauss(x)
-                mean = mean.detach().cpu().numpy()
-                logvar = logvar.detach().cpu().numpy()
-                means.append(mean)
-                logvars.append(logvar)
+    def __enter__(self):
+        
+        self.figure = plt.figure(figsize=(6, 6))
+        
+        sns.set_theme(context=self.sns_context, style=self.sns_style, palette=self.sns_palette)
 
-                t = t.detach().cpu().numpy()
-                ts.append(t)
+        return self
 
-            return np.concatenate(means, axis=0), np.concatenate(logvars, axis=0), np.concatenate(ts, axis=0)
+    def __exit__(self, exc_type, exc_value, traceback):
+        
+        self.figure.savefig(self.out_name + ".svg")
+        self.figure.savefig(self.out_name + ".pdf")
 
-    else:
+        plt.close(self.figure)
+        self.figure = None
 
-        zs = []
-        ts = []
+    def ax(self, nrows: int, ncols: int, index: Union[int, tuple[int, int]]) -> Axes:
 
-        with torch.no_grad():
+        return self.figure.add_subplot(nrows, ncols, index)
 
-            for x, t in loader_test:
-                
-                x = x.to(checkpoint.model.device)
-                z = checkpoint.model.encode(x)
-                z = z.detach().cpu().numpy()
-                zs.append(z)
+def scatter_gaussian(ax: Axes,
+    meanx: np.ndarray, logvarx: np.ndarray,
+    meany: np.ndarray, logvary: np.ndarray,
+) -> Axes:
 
-                t = t.detach().cpu().numpy()
-                ts.append(t)
+    num_data = len(meanx)
+    assert num_data == len(logvarx) == len(meany) == len(logvary)
 
-            return np.concatenate(zs, axis=0), np.concatenate(ts, axis=0)
+    stdx = np.exp(logvarx * 0.5)
+    stdy = np.exp(logvary * 0.5)
 
-def plt_scatter_figure(i_broad: int, j_broad: int, zlim):
-
-    plt.figure(figsize=(6, 6))
-    sns.set(style="whitegrid")
-    plt.xlabel(f"z_{i_broad}")
-    plt.ylabel(f"z_{j_broad}")
-    plt.xlim(zlim)
-    plt.ylim(zlim)
-
-def scatter_plot_gaussian(
-    mean: np.ndarray, logvar: np.ndarray,
-    i_broad: int, j_broad: int,
-    logger_path: str, zlim
-):
-
-    num_data, z_dim = mean.shape
-    
-    plt_scatter_figure(i_broad, j_broad, zlim)
-
-    fig, ax = plt.subplots()
-    fig.set_size_inches(6, 6)
-    ax.set_xlabel(f"z_{i_broad}")
-    ax.set_ylabel(f"z_{j_broad}")
-    ax.set_xlim(zlim)
-    ax.set_ylim(zlim)
-    std_i_broad = np.exp(logvar[:,i_broad] * 0.5)
-    std_j_broad = np.exp(logvar[:,j_broad] * 0.5)
-    
     for idx in range(num_data):
-        center = (mean[idx,i_broad], mean[idx,j_broad])
-        width, height = std_i_broad[idx] * 2, std_j_broad[idx] * 2
-        patch = patches.Ellipse(center, width=width, height=height, fill=False)
+        center = (meanx[idx], meany[idx])
+        width, height = stdx[idx] * 2, stdy[idx] * 2
+        patch = patches.Ellipse(center, width=width, height=height, fill=False, alpha=0.3)
         patch.set_edgecolor("k")
         ax.add_patch(patch)
+
+    return ax
+
+def scatter_all(
+    data: EncodedData,
+    out_dir: str,
+    kde=False,
+    target_colormap=False,
+    z_interest="all",
+    t_interest="all",
+):
+
+    num_data = data.num_data()
+    num_points = 1024
+    indices = np.random.choice(num_data, num_points)
+
+    if isinstance(z_interest, str) and z_interest == "all":
+        z_interest = list(range(data.z_dim()))
+    if isinstance(t_interest, str) and t_interest == "all":
+        t_interest = list(range(data.t_dim()))
+
+    os.makedirs(out_dir, exist_ok=True)
+
+    debug_print(f"Scattering {num_points} points out of {num_data} test data ...")
+    ij = [(i, j) for i, j in itertools.product(z_interest, z_interest) if i < j]
+    ijk = [(i, j, k)
+        for i, j in ij
+        for k in (t_interest if target_colormap and not isinstance(t_interest, str) else [0])]
     
-    plt.savefig(os.path.join(logger_path, "scatter.svg"))
-    plt.savefig(os.path.join(logger_path, "scatter.pdf"))
-    plt.close()
+    for i, j, k in tqdm(ijk):
 
-def scatter_plot(z: np.ndarray, i_broad: int, j_broad: int, logger_path: str, zlim):
+        if target_colormap and not isinstance(t_interest, str):
+            out_name = f"scatter_z{i:03d}_z{j:03d}_t{k:03d}"
+        else:
+            out_name = f"scatter_z{i:03d}_z{j:03d}"
+
+        with ScatterFigure(os.path.join(out_dir, out_name)) as sf:
+
+            ax = sf.ax(1, 1, 1)
+            ax.set_xlabel(f"$z_{{{i}}}$")
+            ax.set_ylabel(f"$z_{{{j}}}$")
+
+            zi = data.z[indices,i]
+            zj = data.z[indices,j]
+
+            xmin = np.min(zi)
+            xmax = np.max(zi)
+            ymin = np.min(zj)
+            ymax = np.max(zj)
+
+            if kde:
+                sns.kdeplot(x=zi, y=zj, fill=True, ax=ax)
+            else:
+                if target_colormap:
+                    if isinstance(t_interest, str) and t_interest == "categorical":
+                        ax.scatter(x=zi, y=zj, c=np.argmax(data.t[indices], axis=1), cmap="rainbow")
+                    else:
+                        ax.scatter(x=zi, y=zj, c=data.t[indices,k], cmap="coolwarm")
+                else:
+                    if data.mean is not None:
+                        meani   = data.mean  [indices,i]
+                        logvari = data.logvar[indices,i]
+                        meanj   = data.mean  [indices,j]
+                        logvarj = data.logvar[indices,j]
+                        scatter_gaussian(ax, meani, logvari, meanj, logvarj)
+                        xmin = np.min(meani - np.exp(logvari * 0.5) * 3)
+                        xmax = np.max(meani + np.exp(logvari * 0.5) * 3)
+                        ymin = np.min(meanj - np.exp(logvarj * 0.5) * 3)
+                        ymax = np.max(meanj + np.exp(logvarj * 0.5) * 3)
+                    else:
+                        ax.scatter(x=zi, y=zj)
+
+            # 5% of margin
+            margin_ratio = 0.05
+            margin_x = max(0.01, xmax - xmin) * margin_ratio
+            margin_y = max(0.01, ymax - ymin) * margin_ratio
+            xmin, xmax = xmin - margin_x, xmax + margin_x
+            ymin, ymax = ymin - margin_y, ymax + margin_y
+            ax.set_xlim([xmin, xmax])
+            ax.set_ylim([ymin, ymax])
+
+def top_k_interesting_latents(data: EncodedData, k: int):
+
+    z = data.mean if data.mean is not None else data.z
+    zstd = z.std(axis=0)
+    return np.argsort(zstd)[::-1][:k]
+
+def top_k_interesting_targets(data: EncodedData, k: int):
+
+    zstd = data.t.std(axis=0)
+    return np.argsort(zstd)[::-1][:k]
+
+def probably_categorical(data: EncodedData):
+
+    EPS = 1e-3
+
+    if data.t_dim() < 2:
+        return False
+
+    d = np.max(np.minimum(data.t, 1. - data.t))
+    if d >= EPS:
+        return False
     
-    num_data, z_dim = z.shape
+    indices = np.argsort(data.t, axis=1)
+    best = data.t[np.arange(data.num_data()), indices[:,-1]]
+    second = data.t[np.arange(data.num_data()), indices[:,-2]]
+    disc = best - second
+    return bool(1. - np.min(disc) < EPS)
+
+def marginal_plot(z: np.ndarray, density_path: str):
+
+    data_size, z_dim = z.shape
     
-    plt_scatter_figure(i_broad, j_broad, zlim)
-
-    sns.scatterplot(z[:,i_broad], z[:,j_broad])
-    plt.savefig(os.path.join(logger_path, "scatter.svg"))
-    plt.savefig(os.path.join(logger_path, "scatter.pdf"))
-    plt.close()
-
-def visualize(checkpoint: Checkpoint, i_scatter=None, j_scatter=None, figsize=(6, 6)):
-
-    logger_path = checkpoint.options["logger_path"]
-
-    rendered = render(checkpoint)
-    is_gaussian = len(rendered) == 3
-    if is_gaussian:
-        mean, logvar, t = rendered
-        z = mean + np.exp(logvar * 0.5) * np.random.normal(size=mean.shape)
-    else:
-        z, t = rendered
-    num_data, z_dim = z.shape
-    num_data, t_dim = t.shape
-
-    # plot empirical latent distributions
-    density_path = os.path.join(logger_path, "density")
     os.makedirs(density_path, exist_ok=True)
     for i in tqdm(range(z_dim)):
 
@@ -146,106 +199,81 @@ def visualize(checkpoint: Checkpoint, i_scatter=None, j_scatter=None, figsize=(6
         plt.savefig(os.path.join(density_path, f"z_{i:03d}.pdf"))
         plt.close()
 
-    # visualize the correlation coefficient matrix
+def correlation_plot(z: np.ndarray, out_name: str):
+
+    data_size, z_dim = z.shape
+
     corr = np.corrcoef(z, rowvar=False)
     labels = [f"$z_{{{i}}}$" for i in range(z_dim)]
+
     plt.figure(figsize=(7, 6))
     sns.heatmap(corr, xticklabels=labels, yticklabels=labels, vmin=-1, vmax=1)
-    plt.savefig(os.path.join(logger_path, "corr.svg"))
-    plt.savefig(os.path.join(logger_path, "corr.pdf"))
+    plt.savefig(out_name + ".svg")
+    plt.savefig(out_name + ".pdf")
     plt.close()
 
-    # select by I(x,z) = H(z) - H(z|x) if gaussian else variance
-    if i_scatter is None or j_scatter is None:
-        if is_gaussian:
-            def gaussian_entropy(logvar):
-                return 0.5 * (np.log(2 * np.pi) + logvar + 1)
-            hz = gaussian_entropy(np.log(np.var(mean, axis=0)))
-            hzx = np.mean(gaussian_entropy(logvar), axis=0)
-            ixz = hz - hzx
-            mut_rank = np.argsort(ixz)
-            i_broad, j_broad = mut_rank[-1], mut_rank[-2]
-        else:
-            var_rank = np.argsort(np.var(z, axis=0))
-            i_broad, j_broad = var_rank[-1], var_rank[-2]
+@torch.no_grad()
+def scatter_decoder(model: AutoEncoderRLModel, z_dim: int, i: int, j: int, out_dir: str):
+
+    os.makedirs(out_dir, exist_ok=True)
+
+    rows, cols = 11, 11
+
+    z = np.zeros(shape=[rows, cols, z_dim])
+    pos_y = np.linspace(-3, 3, rows)
+    pos_x = np.linspace(-3, 3, cols)
+    z[:,:,i] = pos_x[None,:]
+    z[:,:,j] = pos_y[:,None]
+    z = torch.tensor(z).float().cuda().view(rows * cols, z_dim)
+
+    x2 = model.decode(z)
+    x2 = x2.detach().cpu().view(rows, cols, *x2.shape[1:]).numpy()
+    img = np.transpose(x2, [0, 1, 3, 4, 2])[...,::-1]
+    img = np.concatenate(img, axis=1)
+    img = np.concatenate(img, axis=1)
+    img = (img * 255).astype(np.uint8)
+    
+    out_path = os.path.join(out_dir, f"scatter_decoder_z{i:03d}_z{j:03d}.png")
+    cv2.imwrite(out_path, img)
+
+def visualize(checkpoint: Checkpoint):
+
+    data = EncodedData(checkpoint.model, checkpoint.dataset.test_set, batch_size=checkpoint.options["batch_size"])
+
+    debug_print("Plotting the latent marginal ...")
+    marginal_plot(data.z, os.path.join(checkpoint.options["logger_path"], "density"))
+
+    debug_print("Plotting the latent correlations ...")
+    correlation_plot(data.z, os.path.join(checkpoint.options["logger_path"], "corr"))
+
+    z_interest = top_k_interesting_latents(data, 4)
+    if probably_categorical(data):
+        t_interest = "categorical"
     else:
-        i_broad, j_broad = i_scatter, j_scatter
+        t_interest = top_k_interesting_targets(data, 10)
 
-    mean_i_broad = np.mean(z[:,i_broad])
-    mean_j_broad = np.mean(z[:,j_broad])
-    std_i_broad = np.std(z[:,i_broad])
-    std_j_broad = np.std(z[:,j_broad])
-    r = np.max([
-        np.abs(mean_i_broad - std_i_broad * 4),
-        np.abs(mean_i_broad + std_i_broad * 4),
-        np.abs(mean_j_broad - std_j_broad * 4),
-        np.abs(mean_j_broad + std_j_broad * 4),
-    ])
-    r = float(r)
-    zlim = [-r, r]
+    scatter_all(
+        data, os.path.join(checkpoint.options["logger_path"], "scatter"),
+        z_interest=z_interest, t_interest=t_interest)
+    scatter_all(
+        data, os.path.join(checkpoint.options["logger_path"], "scatter_kde"),
+        kde=True,
+        z_interest=z_interest, t_interest=t_interest)
+    scatter_all(
+        data, os.path.join(checkpoint.options["logger_path"], "scatter_colormap"),
+        target_colormap=True,
+        z_interest=z_interest, t_interest=t_interest)
 
-    # visualize scatters of z_0 and z_1
-    if is_gaussian:
-        scatter_plot_gaussian(mean, logvar, i_broad, j_broad, logger_path, zlim)
-    else:
-        scatter_plot(z, i_broad, j_broad, logger_path, zlim)
+    if isinstance(checkpoint.model, AutoEncoderRLModel):
+        debug_print("Scattering the decoder output ...")
+        ij = [(i, j) for i, j in itertools.product(z_interest, z_interest) if i < j]
+        out_dir = os.path.join(checkpoint.options["logger_path"], "scatter_decoder")
+        for i, j in tqdm(ij):
+            scatter_decoder(
+                checkpoint.model, data.z_dim(),
+                i, j,
+                out_dir=out_dir)
 
-    # visualize KDE of z_0 and z_1
-    plt.figure(figsize=figsize)
-    sns.kdeplot(x=z[:,i_broad], y=z[:,j_broad], fill=True)
-    plt.xlabel(f"z_{i_broad}")
-    plt.ylabel(f"z_{j_broad}")
-    plt.xlim(zlim)
-    plt.ylim(zlim)
-    plt.savefig(os.path.join(logger_path, "scatter_kde.svg"))
-    plt.savefig(os.path.join(logger_path, "scatter_kde.pdf"))
-    plt.close()
-
-    if checkpoint.options["dataset"] == "celeba":
-
-        # visualize scatters of z_0 and z_1 by t_20 (Male)
-        # zu = (z - np.mean(z, axis=0, keepdims=True)) / np.std(z, axis=0, keepdims=True)
-        # tu = (t[:,20] - np.mean(t[:,20], axis=0)) / np.std(t[:,20], axis=0)
-        # sxy = np.mean(zu * tu[:,None], axis=0)
-        # sx = np.mean(zu ** 2, axis=0)
-        # sy = np.mean(tu ** 2)
-        # r = sxy / sx / sy
-        # print(f"[distribution.py] {r}")
-        # argsorted = np.argsort(np.abs(r))
-        # i_broad = argsorted[-1]
-        # j_broad = argsorted[-2]
-
-        attributes = list(enumerate("5_o_Clock_Shadow Arched_Eyebrows Attractive Bags_Under_Eyes Bald Bangs Big_Lips Big_Nose Black_Hair Blond_Hair Blurry Brown_Hair Bushy_Eyebrows Chubby Double_Chin Eyeglasses Goatee Gray_Hair Heavy_Makeup High_Cheekbones Male Mouth_Slightly_Open Mustache Narrow_Eyes No_Beard Oval_Face Pale_Skin Pointy_Nose Receding_Hairline Rosy_Cheeks Sideburns Smiling Straight_Hair Wavy_Hair Wearing_Earrings Wearing_Hat Wearing_Lipstick Wearing_Necklace Wearing_Necktie Young".split(" ")))
-
-        directory_path = os.path.join(logger_path, "scatter")
-        os.makedirs(directory_path, exist_ok=True)
-
-        for attr_index, attr_name in tqdm(attributes):
-
-            mask = t[:,attr_index] >= 0.5
-
-            plt.figure(figsize=figsize)
-            sns.kdeplot(x=z[~mask,i_broad], y=z[~mask,j_broad], fill=True, alpha=.5, label=f"{attr_name}=-1")
-            sns.kdeplot(x=z[ mask,i_broad], y=z[ mask,j_broad], fill=True, alpha=.5, label=f"{attr_name}=1")
-            plt.xlabel(f"$z_{i_broad+1}$")
-            plt.ylabel(f"$z_{j_broad+1}$")
-            plt.xlim(zlim)
-            plt.ylim(zlim)
-            plt.legend()
-            file_name = f"t_{attr_index:03d}_{attr_name}_kde"
-            plt.savefig(os.path.join(directory_path, f"{file_name}.pdf"))
-            plt.savefig(os.path.join(directory_path, f"{file_name}.svg"))
-            plt.close()
-
-            plt.figure(figsize=figsize)
-            sns.scatterplot(x=z[~mask,i_broad], y=z[~mask,j_broad], alpha=.5, label=f"{attr_name}=-1")
-            sns.scatterplot(x=z[ mask,i_broad], y=z[ mask,j_broad], alpha=.5, label=f"{attr_name}=1")
-            plt.xlabel(f"$z_{i_broad+1}$")
-            plt.ylabel(f"$z_{j_broad+1}$")
-            plt.xlim(zlim)
-            plt.ylim(zlim)
-            plt.legend()
-            file_name = f"t_{attr_index:03d}_{attr_name}"
-            plt.savefig(os.path.join(directory_path, f"{file_name}.pdf"))
-            plt.savefig(os.path.join(directory_path, f"{file_name}.svg"))
-            plt.close()
+    del data
+    torch.cuda.synchronize()
+    torch.cuda.empty_cache()
