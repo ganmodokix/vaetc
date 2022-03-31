@@ -287,7 +287,7 @@ def visualize(checkpoint: Checkpoint):
     debug_print("Plotting the latent correlations ...")
     correlation_plot(data.z, os.path.join(checkpoint.options["logger_path"], "corr"))
 
-    z_interest = top_k_interesting_latents(data, 4)
+    z_interest = top_k_interesting_latents(data, 10)
     if probably_categorical(data):
         t_interest = "categorical"
     else:
