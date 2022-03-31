@@ -130,9 +130,9 @@ def scatter(
         # xmin, xmax = xmin - margin_x, xmax + margin_x
         # ymin, ymax = ymin - margin_y, ymax + margin_y
         xmin = zi.mean() - zi.std() * 4
-        xmax = zi.mean() - zi.std() * 4
+        xmax = zi.mean() + zi.std() * 4
         ymin = zj.mean() - zj.std() * 4
-        ymax = zj.mean() - zj.std() * 4
+        ymax = zj.mean() + zj.std() * 4
         ax.set_xlim([xmin, xmax])
         ax.set_ylim([ymin, ymax])
 
