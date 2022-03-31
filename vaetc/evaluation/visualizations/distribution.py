@@ -129,8 +129,7 @@ def scatter(
         margin_y = max(0.01, ymax - ymin) * margin_ratio
         xmin, xmax = xmin - margin_x, xmax + margin_x
         ymin, ymax = ymin - margin_y, ymax + margin_y
-        xmin, xmax = -10, 10
-        ymin, ymax = -10, 10
+        
         ax.set_xlim([xmin, xmax])
         ax.set_ylim([ymin, ymax])
 
