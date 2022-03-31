@@ -95,10 +95,10 @@ def scatter(
         zi = data.z[indices,i]
         zj = data.z[indices,j]
 
-        xmin = np.min(zi)
-        xmax = np.max(zi)
-        ymin = np.min(zj)
-        ymax = np.max(zj)
+        # xmin = np.min(zi)
+        # xmax = np.max(zi)
+        # ymin = np.min(zj)
+        # ymax = np.max(zj)
 
         if kde:
             sns.kdeplot(x=zi, y=zj, fill=True, ax=ax)
@@ -116,19 +116,23 @@ def scatter(
                     meanj   = data.mean  [indices,j]
                     logvarj = data.logvar[indices,j]
                     scatter_gaussian(ax, meani, logvari, meanj, logvarj)
-                    xmin = np.min(meani - np.exp(logvari * 0.5) * 3)
-                    xmax = np.max(meani + np.exp(logvari * 0.5) * 3)
-                    ymin = np.min(meanj - np.exp(logvarj * 0.5) * 3)
-                    ymax = np.max(meanj + np.exp(logvarj * 0.5) * 3)
+                    # xmin = np.min(meani - np.exp(logvari * 0.5) * 3)
+                    # xmax = np.max(meani + np.exp(logvari * 0.5) * 3)
+                    # ymin = np.min(meanj - np.exp(logvarj * 0.5) * 3)
+                    # ymax = np.max(meanj + np.exp(logvarj * 0.5) * 3)
                 else:
                     path_collection = ax.scatter(x=zi, y=zj)
 
-        # 5% of margin
-        margin_ratio = 0.05
-        margin_x = max(0.01, xmax - xmin) * margin_ratio
-        margin_y = max(0.01, ymax - ymin) * margin_ratio
-        xmin, xmax = xmin - margin_x, xmax + margin_x
-        ymin, ymax = ymin - margin_y, ymax + margin_y
+        # # 5% of margin
+        # margin_ratio = 0.05
+        # margin_x = max(0.01, xmax - xmin) * margin_ratio
+        # margin_y = max(0.01, ymax - ymin) * margin_ratio
+        # xmin, xmax = xmin - margin_x, xmax + margin_x
+        # ymin, ymax = ymin - margin_y, ymax + margin_y
+        xmin = zi.mean() - zi.std() * 4
+        xmax = zi.mean() - zi.std() * 4
+        ymin = zj.mean() - zj.std() * 4
+        ymax = zj.mean() - zj.std() * 4
         ax.set_xlim([xmin, xmax])
         ax.set_ylim([ymin, ymax])
 
