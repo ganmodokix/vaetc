@@ -20,8 +20,8 @@ def visualize(checkpoint: Checkpoint):
 
         plt.figure()
         sns.set(style="whitegrid")
-        plt.plot(x, y_train, label=key)
-        plt.plot(x, y_valid, label=f"val_{key}")
+        plt.plot(x, y_train, label="Training")
+        plt.plot(x, y_valid, label="Validation")
         plt.legend()
         plt.savefig(os.path.join(history_dir, f"{key}.svg"))
         plt.savefig(os.path.join(history_dir, f"{key}.pdf"))
