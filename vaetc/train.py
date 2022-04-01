@@ -150,7 +150,6 @@ def train_one_epoch(checkpoint: Checkpoint, loader_train: DataLoader, epoch: int
 
     return epoch_history
 
-@torch.no_grad()
 def validate_one_epoch(checkpoint: Checkpoint, loader_valid: DataLoader) -> dict[str, float]:
     """ Computes validation losses for one epoch
 
