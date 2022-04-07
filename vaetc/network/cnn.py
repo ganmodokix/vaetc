@@ -6,7 +6,11 @@ from .blocks import SigmoidInverse, ResBlock
 class ConvEncoder(nn.Module):
     """ A convolutional encoder, the same as :class:`ConvGaussianEncoder` without logvar """
 
-    def __init__(self, z_dim: int, in_features: int = 3, batchnorm: bool = True, inplace: bool = True, resblock: bool = False):
+    def __init__(self,
+        z_dim: int, in_features: int = 3,
+        batchnorm: bool = True, batchnorm_momentum: float = 0.1,
+        inplace: bool = True, resblock: bool = False
+    ):
 
         super().__init__()
 
@@ -20,27 +24,27 @@ class ConvEncoder(nn.Module):
             
             nn.Conv2d(self.in_features, 32, 4, stride=2, padding=1, padding_mode=padding_mode),
             nn.SiLU(inplace),
-            nn.BatchNorm2d(32) if batchnorm else None,
-            ResBlock(32, batchnorm=batchnorm) if resblock else None,
-            ResBlock(32, batchnorm=batchnorm) if resblock else None,
+            nn.BatchNorm2d(32, momentum=batchnorm_momentum) if batchnorm else None,
+            ResBlock(32, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
+            ResBlock(32, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
 
             nn.Conv2d(32, 64, 4, stride=2, padding=1, padding_mode=padding_mode),
             nn.SiLU(inplace),
-            nn.BatchNorm2d(64) if batchnorm else None,
-            ResBlock(64, batchnorm=batchnorm) if resblock else None,
-            ResBlock(64, batchnorm=batchnorm) if resblock else None,
+            nn.BatchNorm2d(64, momentum=batchnorm_momentum) if batchnorm else None,
+            ResBlock(64, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
+            ResBlock(64, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
             
             nn.Conv2d(64, 128, 4, stride=2, padding=1, padding_mode=padding_mode),
             nn.SiLU(inplace),
-            nn.BatchNorm2d(128) if batchnorm else None,
-            ResBlock(128, batchnorm=batchnorm) if resblock else None,
-            ResBlock(128, batchnorm=batchnorm) if resblock else None,
+            nn.BatchNorm2d(128, momentum=batchnorm_momentum) if batchnorm else None,
+            ResBlock(128, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
+            ResBlock(128, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
             
             nn.Conv2d(128, 256, 4, stride=2, padding=1, padding_mode=padding_mode),
             nn.SiLU(inplace),
-            nn.BatchNorm2d(256) if batchnorm else None,
-            ResBlock(256, batchnorm=batchnorm) if resblock else None,
-            ResBlock(256, batchnorm=batchnorm) if resblock else None,
+            nn.BatchNorm2d(256, momentum=batchnorm_momentum) if batchnorm else None,
+            ResBlock(256, batchnorm=batchnorm, momentum=batchnorm_momentum) if resblock else None,
+            ResBlock(256, batchnorm=batchnorm, momentum=batchnorm_momentum) if resblock else None,
             
             nn.Flatten(),
             nn.Linear(256 * 4 * 4, 256),
@@ -60,18 +64,22 @@ class ConvGaussianEncoder(ConvEncoder):
     """ A convolutional encoder mainly based on the original VAE paper's settings
     [Higgins+, 2016 (https://openreview.net/forum?id=Sy2fzU9gl)] """
 
-    def __init__(self, z_dim: int, in_features: int = 3, batchnorm: bool = True, inplace: bool = True, resblock: bool = False):
+    def __init__(self,
+        z_dim: int, in_features: int = 3,
+        batchnorm: bool = True, batchnorm_momentum: float = 0.1,
+        inplace: bool = True, resblock: bool = False
+    ):
 
-        super().__init__(z_dim, in_features, batchnorm, inplace, resblock)
+        super().__init__(z_dim, in_features, batchnorm, batchnorm_momentum, inplace, resblock)
 
         if batchnorm:
             self.fc = nn.Sequential(
                 nn.Linear(256, self.z_dim),
-                nn.BatchNorm1d(self.z_dim),
+                nn.BatchNorm1d(self.z_dim, momentum=batchnorm_momentum),
             )
             self.fc_logvar = nn.Sequential(
                 nn.Linear(256, self.z_dim),
-                nn.BatchNorm1d(self.z_dim),
+                nn.BatchNorm1d(self.z_dim, momentum=batchnorm_momentum),
             )
         else:
             self.fc_logvar = nn.Linear(256, self.z_dim)
@@ -89,7 +97,11 @@ class ConvDecoder(nn.Module):
     """ A convolutional decoder mainly based on the original VAE paper's settings
     [Higgins+, 2016 (https://openreview.net/forum?id=Sy2fzU9gl)] """
 
-    def __init__(self, z_dim: int, out_features: int = 3, batchnorm: bool = True, inplace: bool = True, resblock: bool = False):
+    def __init__(self,
+        z_dim: int, out_features: int = 3,
+        batchnorm: bool = True, batchnorm_momentum: float = 0.1,
+        inplace: bool = True, resblock: bool = False
+    ):
         super().__init__()
 
         self.z_dim = z_dim
@@ -104,25 +116,25 @@ class ConvDecoder(nn.Module):
 
             nn.ConvTranspose2d(256, 128, 4, stride=2, padding=1, padding_mode="zeros"),
             nn.SiLU(inplace),
-            nn.BatchNorm2d(128) if batchnorm else None,
-            ResBlock(128, batchnorm=batchnorm) if resblock else None,
-            ResBlock(128, batchnorm=batchnorm) if resblock else None,
+            nn.BatchNorm2d(128, momentum=batchnorm_momentum) if batchnorm else None,
+            ResBlock(128, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
+            ResBlock(128, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
 
             nn.ConvTranspose2d(128, 64, 4, stride=2, padding=1, padding_mode="zeros"),
             nn.SiLU(inplace),
-            nn.BatchNorm2d(64) if batchnorm else None,
-            ResBlock(64, batchnorm=batchnorm) if resblock else None,
-            ResBlock(64, batchnorm=batchnorm) if resblock else None,
+            nn.BatchNorm2d(64, momentum=batchnorm_momentum) if batchnorm else None,
+            ResBlock(64, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
+            ResBlock(64, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
 
             nn.ConvTranspose2d(64, 32, 4, stride=2, padding=1, padding_mode="zeros"),
             nn.SiLU(inplace),
-            nn.BatchNorm2d(32) if batchnorm else None,
-            ResBlock(32, batchnorm=batchnorm) if resblock else None,
-            ResBlock(32, batchnorm=batchnorm) if resblock else None,
+            nn.BatchNorm2d(32, momentum=batchnorm_momentum) if batchnorm else None,
+            ResBlock(32, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
+            ResBlock(32, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
 
             nn.ConvTranspose2d(32, self.out_features, 4, stride=2, padding=1, padding_mode="zeros"),
-            ResBlock(self.out_features, batchnorm=batchnorm) if resblock else None,
-            ResBlock(self.out_features, batchnorm=batchnorm) if resblock else None,
+            ResBlock(self.out_features, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
+            ResBlock(self.out_features, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
 
             nn.Sigmoid(),
         ]

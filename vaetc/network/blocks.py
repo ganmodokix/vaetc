@@ -47,7 +47,7 @@ class ResBlock(nn.Module):
     (https://arxiv.org/abs/1603.05027)
     """
 
-    def __init__(self, num_channels: int, inplace: bool = True, batchnorm: bool = False) -> None:
+    def __init__(self, num_channels: int, inplace: bool = True, batchnorm: bool = False, batchnorm_momentum: float = 0.1) -> None:
         super().__init__()
 
         padding_mode = "zeros" if torch.are_deterministic_algorithms_enabled() else "replicate"
@@ -55,11 +55,11 @@ class ResBlock(nn.Module):
         layers = [
             nn.Conv2d(num_channels, num_channels, 1, 1, 0, padding_mode=padding_mode),
             nn.SiLU(inplace),
-            nn.BatchNorm2d(num_channels) if batchnorm else None,
+            nn.BatchNorm2d(num_channels, momentum=batchnorm_momentum) if batchnorm else None,
 
             nn.Conv2d(num_channels, num_channels, 1, 1, 0, padding_mode=padding_mode),
             nn.SiLU(inplace),
-            nn.BatchNorm2d(num_channels) if batchnorm else None,
+            nn.BatchNorm2d(num_channels, momentum=batchnorm_momentum) if batchnorm else None,
         ]
         layers = [layer for layer in layers if layer is not None]
         self.net = nn.Sequential(*layers)
