@@ -12,9 +12,9 @@ if __name__ == "__main__":
 
     checkpoint = vaetc.Checkpoint(options={
         "model_name": "vitae",
-        "dataset": "getchu",
+        "dataset": "cifar10",
         "batch_size": 256,
-        "logger_path": "runs.tests/current",
+        "logger_path": "runs.tests/fid",
         "hyperparameters": yaml.safe_dump({
             "lr": 1e-4,
             "z_dim": 16,

@@ -19,6 +19,7 @@ from . import transfer
 from . import intervention
 from . import predictor
 from . import elbo
+from . import generation
 
 from vaetc.utils import debug_print
 from vaetc.checkpoint import Checkpoint
@@ -54,6 +55,11 @@ def evaluate_set(data: EncodedData, random_state: int = 42) -> Dict[str, float]:
             means[metric_name] = np.mean(results[metric_name])
             means[metric_name] = float(means[metric_name])
         return means
+
+    # Generation Quality
+    debug_print("Calculating FID...")
+    fid = generation.fid(data.x, data.x2)
+    add_result("FID", fid)
         
     # Intervention-based metrics
     debug_print("Calculating Beta-VAE metric...")
