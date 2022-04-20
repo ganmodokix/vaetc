@@ -54,3 +54,12 @@ from .avb import AdversarialVariationalBayes
 register_model("avb", AdversarialVariationalBayes)
 from .dagmm import DAGMM
 register_model("dagmm", DAGMM)
+
+from .twostagevae import TwoStageVAE
+register_model("twostagevae", TwoStageVAE)
+from .vamppriorvae import VampPriorVAE
+register_model("vamppriorvae", VampPriorVAE)
+from .geco import GECO
+register_model("geco", GECO)
+from .exactelbovae import ExactELBOVAE
+register_model("exactelbovae", ExactELBOVAE)
