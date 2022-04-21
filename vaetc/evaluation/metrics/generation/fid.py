@@ -1,3 +1,4 @@
+import math
 import numpy as np
 from scipy.linalg import sqrtm
 
@@ -65,7 +66,8 @@ def fid(x_real: np.ndarray, x_gen: np.ndarray, eps = 1e-6) -> float:
     if np.iscomplexobj(covmean):
         if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
             m = np.max(np.abs(covmean.imag))
-            raise ValueError(f"Not invertible; imaginary value {m} found in diagonal")
+            debug_print(f"Not invertible; imaginary value {m} found in diagonal")
+            return math.nan
         else:
             covmean = covmean.real
 
