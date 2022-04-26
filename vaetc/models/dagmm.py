@@ -35,8 +35,9 @@ class DAGMM(AutoEncoderRLModel):
         )
 
         self.momentum = 0.1
-        self.runnning_mean = nn.Parameter(torch.zeros(size=[self.z_dim, self.num_components]), requires_grad=False)
-        self.runnning_sigma = nn.Parameter(torch.eye(self.z_dim).unsqueeze(2).tile(1, 1, self.num_components), requires_grad=False)
+        self.running_mean = nn.Parameter(torch.zeros(size=[self.z_dim, self.num_components]), requires_grad=False)
+        self.running_sigma = nn.Parameter(torch.eye(self.z_dim).unsqueeze(2).tile(1, 1, self.num_components), requires_grad=False)
+        self.running_phi = nn.Parameter(torch.ones(self.num_components, ) / self.num_components, requires_grad=False) # mixing ratio
         self.num_running = nn.Parameter(torch.tensor(0), requires_grad=False)
 
     def build_optimizers(self) -> dict[str, torch.optim.Optimizer]:
@@ -65,20 +66,34 @@ class DAGMM(AutoEncoderRLModel):
         cos_sim = (xf * x2f).sum(dim=1) / (xf_norm * x2f_norm + EPS)
         return torch.stack([rel_euc, cos_sim], dim=1)
 
+    def energy(z: torch.Tensor, mean: torch.Tensor, sigma: torch.Tensor, phi: torch.Tensor):
+        
+        inv_sigma = torch.linalg.inv(sigma.permute(2, 0, 1)).permute(1, 2, 0) # (L, L, K)
+
+        diff_z = z[:,:,None] - mean[None,:,:] # (B, L, K)
+        mahalanobis_dist = (diff_z[:,:,None,:] * diff_z[:,None,:,:] * inv_sigma[None,:,:,:]).sum(dim=[1,2]) # (B, K)
+        logdet_sigma = torch.logdet(sigma.permute(2, 0, 1) * math.log(math.pi * 2)) # (K, )
+
+        gauss_density = -0.5 * (torch.relu(mahalanobis_dist) + logdet_sigma[None,:]) # (B, K)
+        energy = -torch.logsumexp(gauss_density + phi.log()[None,:], dim=1) # (B, )
+
+        return energy
+
     def forward(self, x: torch.Tensor):
+
+        EPS = 1e-5
 
         z = self.encode(x) # (B, L)
         x2 = self.decode(z)
 
         zr = self.reconstruction_features(x, x2)
         zcr = torch.cat([z, zr], dim=1)
-            
-        gamma_hat: torch.Tensor = self.estimation_block(zcr) # (B, K)
-        phi_hat = gamma_hat.mean(dim=0) # (K, )
 
         if self.training:
+            
+            gamma_hat: torch.Tensor = self.estimation_block(zcr) # (B, K)
+            phi_hat = gamma_hat.mean(dim=0) # (K, )
 
-            EPS = 1e-5
             mean_hat = (gamma_hat[:,None,:] * z[:,:,None]).sum(dim=0) / (gamma_hat.sum(dim=0) + EPS)[None,:] # (L, K)
 
             diff_z = z[:,:,None] - mean_hat[None,:,:] # (B, L, K)
@@ -86,30 +101,26 @@ class DAGMM(AutoEncoderRLModel):
             sigma_hat = sigma_hat + torch.eye(self.z_dim, device=sigma_hat.device)[:,:,None] * 1e-6
 
             if self.num_running.item() == 0:
-                self.runnning_mean.copy_(mean_hat)
-                self.runnning_sigma.copy_(sigma_hat)
+                self.running_mean.copy_(mean_hat)
+                self.running_sigma.copy_(sigma_hat)
+                self.running_phi.copy(phi_hat)
             else:
-                self.runnning_mean.copy_(mean_hat * self.momentum + self.runnning_mean * (1 - self.momentum))
-                self.runnning_sigma.copy_(sigma_hat * self.momentum + self.runnning_sigma * (1 - self.momentum))
+                self.running_mean.copy_(mean_hat * self.momentum + self.running_mean * (1 - self.momentum))
+                self.running_sigma.copy_(sigma_hat * self.momentum + self.running_sigma * (1 - self.momentum))
+                self.running_phi.copy(phi_hat * self.momentum + self.running_phi * (1 - self.momentum))
             self.num_running += 1
 
         else:
             
-            mean_hat = self.runnning_mean
-            sigma_hat = self.runnning_sigma
+            mean_hat = self.running_mean
+            sigma_hat = self.running_sigma
+            phi_hat = self.running_phi
         
-        inv_sigma_hat = torch.linalg.inv(sigma_hat.permute(2, 0, 1)).permute(1, 2, 0) # (L, L, K)
+        energy = self.energy(mean_hat, sigma_hat, phi_hat)
 
-        diff_z = z[:,:,None] - mean_hat[None,:,:] # (B, L, K)
-        mahalanobis_dist = (diff_z[:,:,None,:] * diff_z[:,None,:,:] * inv_sigma_hat[None,:,:,:]).sum(dim=[1,2]) # (B, K)
-        logdet_sigma_hat = torch.logdet(sigma_hat.permute(2, 0, 1) * math.log(math.pi * 2)) # (K, )
+        return z, x2, zr, zcr, mean_hat, sigma_hat, phi_hat, energy
 
-        gauss_density = -0.5 * (torch.relu(mahalanobis_dist) + logdet_sigma_hat[None,:]) # (B, K)
-        energy = -torch.logsumexp(gauss_density + phi_hat.log()[None,:], dim=1) # (B, )
-
-        return z, x2, zr, zcr, mean_hat, sigma_hat, energy
-
-    def loss(self, x, z, x2, zr, zcr, mean_hat, sigma_hat, energy):
+    def loss(self, x, z, x2, zr, zcr, mean_hat, sigma_hat, phi_hat, energy):
 
         EPS = 1e-5
 
@@ -135,8 +146,8 @@ class DAGMM(AutoEncoderRLModel):
         x, t = batch
         x = x.cuda()
 
-        z, x2, zr, zcr, mean_hat, sigma_hat, energy = self(x)
-        loss, loss_dict = self.loss(x, z, x2, zr, zcr, mean_hat, sigma_hat, energy)
+        z, x2, zr, zcr, mean_hat, sigma_hat, phi_hat, energy = self(x)
+        loss, loss_dict = self.loss(x, z, x2, zr, zcr, mean_hat, sigma_hat, phi_hat, energy)
 
         if training:
             self.zero_grad()
