@@ -51,7 +51,7 @@ def load_dataset(dataset_name: str) -> data.ImageDataset:
 
     if dataset_name not in LOAD_DATASET_CACHE:
 
-        if dataset_name != "image_dataset" and dataset_name in data.__dict__:
+        if dataset_name in data.__dict__:
 
             LOAD_DATASET_CACHE[dataset_name] = data.__dict__[dataset_name]()
 

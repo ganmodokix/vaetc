@@ -77,8 +77,9 @@ def very_verbose_output(checkpoint: Checkpoint, epoch: int):
     else:
         debug_print("Latent Traversal skipped; no decoder")
 
-    torch.cuda.synchronize()
-    torch.cuda.empty_cache()
+    if checkpoint.options["cuda_sync"]:
+        torch.cuda.synchronize()
+        torch.cuda.empty_cache()
 
     if isinstance(checkpoint.model, AutoEncoderRLModel):
         debug_print("Reconstructing examples...")
@@ -86,8 +87,9 @@ def very_verbose_output(checkpoint: Checkpoint, epoch: int):
     else:
         debug_print("Reconstructions skipped; no decoder")
 
-    torch.cuda.synchronize()
-    torch.cuda.empty_cache()
+    if checkpoint.options["cuda_sync"]:
+        torch.cuda.synchronize()
+        torch.cuda.empty_cache()
 
     if isinstance(checkpoint.model, GaussianEncoderAutoEncoderRLModel):
         debug_print("Sampling images...")
@@ -95,8 +97,9 @@ def very_verbose_output(checkpoint: Checkpoint, epoch: int):
     else:
         debug_print("Sampling skipped; no decoder")
 
-    torch.cuda.synchronize()
-    torch.cuda.empty_cache()
+    if checkpoint.options["cuda_sync"]:
+        torch.cuda.synchronize()
+        torch.cuda.empty_cache()
 
 def train_one_epoch(checkpoint: Checkpoint, loader_train: DataLoader, epoch: int) -> dict[str, float]:
     """ Trains one epoch and returns the training loss value
