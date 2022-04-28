@@ -1,4 +1,3 @@
-from turtle import forward
 from typing import Dict, Tuple, Optional
 import itertools
 
