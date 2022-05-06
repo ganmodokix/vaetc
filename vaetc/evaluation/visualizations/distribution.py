@@ -108,7 +108,7 @@ def scatter(
                     path_collection = ax.scatter(x=zi, y=zj, c=np.argmax(data.t[indices], axis=1), cmap="rainbow")
                 else:
                     c = data.t[indices,target_k]
-                    path_collection = ax.scatter(x=zi, y=zj, c=c, cmap="coolwarm", vmin=0, vmax=1)
+                    path_collection = ax.scatter(x=zi, y=zj, c=c, cmap="rainbow", vmin=0, vmax=1)
             else:
                 if data.mean is not None:
                     meani   = data.mean  [indices,i]
