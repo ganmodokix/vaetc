@@ -66,7 +66,7 @@ class DAGMM(AutoEncoderRLModel):
         cos_sim = (xf * x2f).sum(dim=1) / (xf_norm * x2f_norm + EPS)
         return torch.stack([rel_euc, cos_sim], dim=1)
 
-    def energy(z: torch.Tensor, mean: torch.Tensor, sigma: torch.Tensor, phi: torch.Tensor):
+    def energy(self, z: torch.Tensor, mean: torch.Tensor, sigma: torch.Tensor, phi: torch.Tensor):
         
         inv_sigma = torch.linalg.inv(sigma.permute(2, 0, 1)).permute(1, 2, 0) # (L, L, K)
 
