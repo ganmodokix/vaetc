@@ -116,7 +116,7 @@ class DAGMM(AutoEncoderRLModel):
             sigma_hat = self.running_sigma
             phi_hat = self.running_phi
         
-        energy = self.energy(mean_hat, sigma_hat, phi_hat)
+        energy = self.energy(z, mean_hat, sigma_hat, phi_hat)
 
         return z, x2, zr, zcr, mean_hat, sigma_hat, phi_hat, energy
 
