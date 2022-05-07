@@ -69,7 +69,7 @@ class DAGMM(AutoEncoderRLModel):
     def energy(self, z: torch.Tensor, mean: torch.Tensor, sigma: torch.Tensor, phi: torch.Tensor):
         
         # inv_sigma = torch.linalg.inv(sigma.permute(2, 0, 1)).permute(1, 2, 0) # (L, L, K)
-        inv_sigma = torch.linalg.cholesky(sigma.permute(2, 0, 1)).permute(1, 2, 0) # (L, L, K)
+        inv_sigma = torch.linalg.pinv(sigma.permute(2, 0, 1)).permute(1, 2, 0) # (L, L, K)
 
         diff_z = z[:,:,None] - mean[None,:,:] # (B, L, K)
         mahalanobis_dist = (diff_z[:,:,None,:] * diff_z[:,None,:,:] * inv_sigma[None,:,:,:]).sum(dim=[1,2]) # (B, K)
