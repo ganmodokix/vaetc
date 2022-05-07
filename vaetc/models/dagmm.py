@@ -103,11 +103,11 @@ class DAGMM(AutoEncoderRLModel):
             if self.num_running.item() == 0:
                 self.running_mean.copy_(mean_hat)
                 self.running_sigma.copy_(sigma_hat)
-                self.running_phi.copy(phi_hat)
+                self.running_phi.copy_(phi_hat)
             else:
                 self.running_mean.copy_(mean_hat * self.momentum + self.running_mean * (1 - self.momentum))
                 self.running_sigma.copy_(sigma_hat * self.momentum + self.running_sigma * (1 - self.momentum))
-                self.running_phi.copy(phi_hat * self.momentum + self.running_phi * (1 - self.momentum))
+                self.running_phi.copy_(phi_hat * self.momentum + self.running_phi * (1 - self.momentum))
             self.num_running += 1
 
         else:
