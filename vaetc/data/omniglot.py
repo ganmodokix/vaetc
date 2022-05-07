@@ -26,11 +26,8 @@ def omniglot():
         return x
 
     target_transform = transforms.Compose([
-        transforms.Lambda(test),
         transforms.Lambda(lambda x: torch.tensor(x)),
-        transforms.Lambda(test),
-        transforms.Lambda(lambda x: F.one_hot(x, num_classes=50).float()),
-        transforms.Lambda(test),
+        transforms.Lambda(lambda x: F.one_hot(x, num_classes=1623).float()),
     ])
 
     background_set = datasets.Omniglot(
