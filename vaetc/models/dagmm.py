@@ -101,13 +101,13 @@ class DAGMM(AutoEncoderRLModel):
             sigma_hat = sigma_hat + torch.eye(self.z_dim, device=sigma_hat.device)[:,:,None] * 1e-6
 
             if self.num_running.item() == 0:
-                self.running_mean.copy_(mean_hat)
-                self.running_sigma.copy_(sigma_hat)
-                self.running_phi.copy_(phi_hat)
+                self.running_mean.copy_(mean_hat.detach())
+                self.running_sigma.copy_(sigma_hat.detach())
+                self.running_phi.copy_(phi_hat.detach())
             else:
-                self.running_mean.copy_(mean_hat * self.momentum + self.running_mean * (1 - self.momentum))
-                self.running_sigma.copy_(sigma_hat * self.momentum + self.running_sigma * (1 - self.momentum))
-                self.running_phi.copy_(phi_hat * self.momentum + self.running_phi * (1 - self.momentum))
+                self.running_mean.copy_(mean_hat.detach() * self.momentum + self.running_mean * (1 - self.momentum))
+                self.running_sigma.copy_(sigma_hat.detach() * self.momentum + self.running_sigma * (1 - self.momentum))
+                self.running_phi.copy_(phi_hat.detach() * self.momentum + self.running_phi * (1 - self.momentum))
             self.num_running += 1
 
         else:
