@@ -21,10 +21,6 @@ def omniglot():
         transforms.Resize(size=(IMAGE_HEIGHT, IMAGE_WIDTH)),
     ])
 
-    def test(x):
-        debug_print(x)
-        return x
-
     target_transform = transforms.Compose([
         transforms.Lambda(lambda x: torch.tensor(x)),
         transforms.Lambda(lambda x: F.one_hot(x, num_classes=1623).float()),
