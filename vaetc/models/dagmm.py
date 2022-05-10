@@ -66,9 +66,10 @@ class DAGMM(AutoEncoderRLModel):
         cos_sim = (xf * x2f).sum(dim=1) / (xf_norm * x2f_norm + EPS)
         return torch.stack([rel_euc, cos_sim], dim=1)
 
-    def energy(z: torch.Tensor, mean: torch.Tensor, sigma: torch.Tensor, phi: torch.Tensor):
+    def energy(self, z: torch.Tensor, mean: torch.Tensor, sigma: torch.Tensor, phi: torch.Tensor):
         
-        inv_sigma = torch.linalg.inv(sigma.permute(2, 0, 1)).permute(1, 2, 0) # (L, L, K)
+        # inv_sigma = torch.linalg.inv(sigma.permute(2, 0, 1)).permute(1, 2, 0) # (L, L, K)
+        inv_sigma = torch.linalg.pinv(sigma.permute(2, 0, 1)).permute(1, 2, 0) # (L, L, K)
 
         diff_z = z[:,:,None] - mean[None,:,:] # (B, L, K)
         mahalanobis_dist = (diff_z[:,:,None,:] * diff_z[:,None,:,:] * inv_sigma[None,:,:,:]).sum(dim=[1,2]) # (B, K)
@@ -101,13 +102,13 @@ class DAGMM(AutoEncoderRLModel):
             sigma_hat = sigma_hat + torch.eye(self.z_dim, device=sigma_hat.device)[:,:,None] * 1e-6
 
             if self.num_running.item() == 0:
-                self.running_mean.copy_(mean_hat)
-                self.running_sigma.copy_(sigma_hat)
-                self.running_phi.copy(phi_hat)
+                self.running_mean.copy_(mean_hat.detach())
+                self.running_sigma.copy_(sigma_hat.detach())
+                self.running_phi.copy_(phi_hat.detach())
             else:
-                self.running_mean.copy_(mean_hat * self.momentum + self.running_mean * (1 - self.momentum))
-                self.running_sigma.copy_(sigma_hat * self.momentum + self.running_sigma * (1 - self.momentum))
-                self.running_phi.copy(phi_hat * self.momentum + self.running_phi * (1 - self.momentum))
+                self.running_mean.copy_(mean_hat.detach() * self.momentum + self.running_mean * (1 - self.momentum))
+                self.running_sigma.copy_(sigma_hat.detach() * self.momentum + self.running_sigma * (1 - self.momentum))
+                self.running_phi.copy_(phi_hat.detach() * self.momentum + self.running_phi * (1 - self.momentum))
             self.num_running += 1
 
         else:
@@ -116,7 +117,7 @@ class DAGMM(AutoEncoderRLModel):
             sigma_hat = self.running_sigma
             phi_hat = self.running_phi
         
-        energy = self.energy(mean_hat, sigma_hat, phi_hat)
+        energy = self.energy(z, mean_hat, sigma_hat, phi_hat)
 
         return z, x2, zr, zcr, mean_hat, sigma_hat, phi_hat, energy
 
