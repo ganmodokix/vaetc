@@ -24,7 +24,7 @@ def render(options, model: AutoEncoderRLModel, i: int, n: int = 15, radius: floa
     else:
         z = np.tile(z_center[None,:], [n, 1])
     
-    z[:,i] = np.linspace(-radius, radius, n)
+    z[:,i] += np.linspace(-radius, radius, n)
     
     with torch.no_grad():
         z = torch.FloatTensor(z).cuda()
