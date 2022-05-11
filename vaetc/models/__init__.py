@@ -37,6 +37,8 @@ from .dfcvae import DFCVAE
 register_model("dfcvae", DFCVAE)
 from .vladderae import VariationalLadderAutoEncoders
 register_model("vladderae", VariationalLadderAutoEncoders)
+from .laddervae import LadderVAE
+register_model("laddervae", LadderVAE)
 from .guidedvae import GuidedVAE
 register_model("guidedvae", GuidedVAE)
 from .bavae import BetaAnnealedVAE
