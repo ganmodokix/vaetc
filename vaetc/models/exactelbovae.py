@@ -2,12 +2,14 @@ from typing import Optional
 
 import math
 
+import numpy as np
 import torch
 from torch import nn
 
 from .utils import detach_dict
 from vaetc.network.reparam import reparameterize
 from vaetc.network.losses import neglogpxz_gaussian, kl_gaussian
+from vaetc.data.utils import IMAGE_SHAPE
 from .vae import VAE
 
 LOG2PI = math.log(math.pi * 2)
@@ -31,7 +33,7 @@ class ExactELBOVAE(VAE):
 
         # Total loss
         sigma2 = self.log_sigma2.exp()
-        loss = loss_reg + loss_ae / sigma2 + 0.5 * (LOG2PI + self.log_sigma2)
+        loss = loss_reg + loss_ae / sigma2 + 0.5 * (LOG2PI + self.log_sigma2) * np.prod(IMAGE_SHAPE)
 
         return loss, detach_dict({
             "loss": loss,
