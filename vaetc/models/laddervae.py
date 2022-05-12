@@ -150,7 +150,7 @@ class LadderVAE(VAE):
                 logvars_p[i] = self.dec_logvars[i-1](h)
                 
                 logvars_q[i] = -torch.stack([-means_p[i], -means_hat[i]], dim=0).logsumexp(dim=0)
-                means_q[i] = (means_hat[i] * (-logvars_hat[i]).exp() + means_p[i] * (-logvars_p[i]).exp()) * (-logvars_q[i]).exp()
+                means_q[i] = (means_hat[i] * (-logvars_hat[i]).exp() + means_p[i] * (-logvars_p[i]).exp()) * logvars_q[i].exp()
 
             zs[i] = self.reparameterize(means_q[i], logvars_q[i])
 
