@@ -83,6 +83,7 @@ def build_features_inception_v3():
     features.eval()
 
     transform = nn.Sequential(
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         nn.AdaptiveAvgPool2d([299, 299]),
     )
 
