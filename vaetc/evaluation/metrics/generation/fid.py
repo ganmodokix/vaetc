@@ -19,7 +19,7 @@ def features_batch(x: torch.Tensor, features, transform) -> torch.Tensor:
     x = transform(x)
     x = x.cuda()
 
-    x = features._transform_input(x)
+    # x = features._transform_input(x)
     f = features(x)
 
     return f.detach()
