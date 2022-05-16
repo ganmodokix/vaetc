@@ -48,7 +48,8 @@ def features_mean_and_cov(x_data: np.ndarray, features, transform, batch_size=64
 
 def fid_gaussian(
     mean_real: np.ndarray, cov_real: np.ndarray,
-    mean_gen: np.ndarray, cov_gen: np.ndarray
+    mean_gen: np.ndarray, cov_gen: np.ndarray,
+    eps: float = 1e-6
 ) -> float:
 
     # time-consuming part
@@ -87,7 +88,7 @@ def build_features_inception_v3():
 
     return features, transform
 
-def fid(x_real: np.ndarray, x_gen: np.ndarray, eps = 1e-6) -> float:
+def fid(x_real: np.ndarray, x_gen: np.ndarray) -> float:
 
     features, transform = build_features_inception_v3()
 
