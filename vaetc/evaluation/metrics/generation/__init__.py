@@ -1,1 +1,1 @@
-from .fid import fid
+from . import fid
