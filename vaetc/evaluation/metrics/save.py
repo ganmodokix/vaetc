@@ -59,7 +59,7 @@ def evaluate_set(data: EncodedData, random_state: int = 42) -> Dict[str, float]:
     # Generation Quality
     if data.x2 is not None:
         debug_print("Calculating FID...")
-        fid = generation.fid(data.x, data.x2)
+        fid = generation.fid.fid(data.x, data.x2)
         add_result("FID", fid)
     else:
         debug_print("FID skipped; no generation")
