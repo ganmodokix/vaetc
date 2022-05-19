@@ -43,8 +43,8 @@ class ConvEncoder(nn.Module):
             nn.Conv2d(128, 256, 4, stride=2, padding=1, padding_mode=padding_mode),
             nn.SiLU(inplace),
             nn.BatchNorm2d(256, momentum=batchnorm_momentum) if batchnorm else None,
-            ResBlock(256, batchnorm=batchnorm, momentum=batchnorm_momentum) if resblock else None,
-            ResBlock(256, batchnorm=batchnorm, momentum=batchnorm_momentum) if resblock else None,
+            ResBlock(256, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
+            ResBlock(256, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
             
             nn.Flatten(),
             nn.Linear(256 * 4 * 4, 256),
