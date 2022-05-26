@@ -50,7 +50,8 @@ class Shapes3D(Dataset):
             self.labels[index,1],
             self.labels[index,2],
             (self.labels[index,3] - 0.75) / (1.25 - 0.75),
-            *one_hot(int(0.5 + self.labels[index,4]), 4),
+            # *one_hot(int(0.5 + self.labels[index,4]), 4),
+            self.labels[index, 4] / 3.0,
             self.labels[index,5] / 60 + 0.5,
         ], dtype=np.float32)
 
