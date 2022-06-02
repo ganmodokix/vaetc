@@ -9,8 +9,6 @@ from vaetc.network.losses import neglogpxz_gaussian
 
 from .vae import VAE
 
-
-
 class SWAE(VAE):
     """ Sliced Wasserstein Autoencoder
     [Kolouri+, 2019 (https://openreview.net/forum?id=H1xaJn05FQ)] """
