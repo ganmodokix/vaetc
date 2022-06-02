@@ -14,17 +14,16 @@ if __name__ == "__main__":
         "model_name": "swae",
         "dataset": "celeba",
         "batch_size": 256,
-        "logger_path": "runs.tests/fid",
+        "logger_path": "runs.tests/swae",
         "hyperparameters": yaml.safe_dump({
             "lr": 1e-4,
-            "z_dim": 16,
-            "zp_dim": 14,
+            "z_dim": 64,
+            "num_projections": 50,
         }),
         "cuda_sync": True,
         "very_verbose": True,
-        "epochs": 1,
-        # "until_convergence": True,
-        # "patience": 10,
+        "until_convergence": True,
+        "patience": 5,
     })
 
     vaetc.fit(checkpoint)
