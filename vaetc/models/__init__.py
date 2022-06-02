@@ -69,3 +69,5 @@ from .iwae import IWAE
 register_model("iwae", IWAE)
 from .swae import SWAE
 register_model("swae", SWAE)
+from .tcwae import TCWAE
+register_model("tcwae", TCWAE)
