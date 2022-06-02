@@ -17,6 +17,7 @@ class SWAE(VAE):
         super().__init__(hyperparameters)
 
         self.coeff_lambda = float(hyperparameters["lambda"])
+        self.num_slices = int(hyperparameters.get("num_slices", 100))
 
     def loss(self, x, z, mean, logvar, x2, progress: Optional[float] = None):
 
@@ -26,8 +27,7 @@ class SWAE(VAE):
 
         zp = self.sample_prior(batch_size).to(device=z.device)
 
-        num_slices = 100
-        th = F.normalize(torch.randn(size=[batch_size, num_slices, self.z_dim], device=z.device), dim=2, p=2, eps=1e-12)
+        th = F.normalize(torch.randn(size=[batch_size, self.num_slices, self.z_dim], device=z.device), dim=2, p=2, eps=1e-12)
         zth = (z [:,None,:] * th).sum(dim=2)
         zpth = (zp[:,None,:] * th).sum(dim=2)
         zth_sorted, _ = torch.sort(zth, dim=0)
