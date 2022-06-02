@@ -65,3 +65,5 @@ from .geco import GECO
 register_model("geco", GECO)
 from .exactelbovae import ExactELBOVAE
 register_model("exactelbovae", ExactELBOVAE)
+from .iwae import IWAE
+register_model("iwae", IWAE)
