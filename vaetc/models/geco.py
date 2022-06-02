@@ -10,6 +10,8 @@ from vaetc.network.losses import neglogpxz_gaussian, kl_gaussian
 from .utils import detach_dict
 
 class GECO(VAE):
+    """ Generalized ELBO with Constrained Optimization, GECO
+    [Rezende & Viola, 2018 (http://bayesiandeeplearning.org/2018/papers/33.pdf, https://arxiv.org/abs/1810.00597)] """ 
 
     def __init__(self, hyperparameters: dict):
         super().__init__(hyperparameters)
