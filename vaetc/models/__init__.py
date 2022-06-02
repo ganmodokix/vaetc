@@ -67,3 +67,5 @@ from .exactelbovae import ExactELBOVAE
 register_model("exactelbovae", ExactELBOVAE)
 from .iwae import IWAE
 register_model("iwae", IWAE)
+from .swae import SWAE
+register_model("swae", SWAE)
