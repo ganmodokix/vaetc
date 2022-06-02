@@ -18,6 +18,7 @@ if __name__ == "__main__":
         "hyperparameters": yaml.safe_dump({
             "lr": 1e-4,
             "z_dim": 64,
+            "lambda": 1,
             "num_projections": 50,
         }),
         "cuda_sync": True,
