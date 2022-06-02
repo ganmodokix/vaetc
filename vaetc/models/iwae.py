@@ -12,6 +12,8 @@ from .vae import VAE
 LOG2PI = math.log(math.pi * 2)
 
 class IWAE(VAE):
+    """ Importance Weighted Autoencoders
+    [Burda+, 2016 (https://openreview.net/forum?id=RFZ6gFAik9K)] """
 
     def __init__(self, hyperparameters: dict):
         super().__init__(hyperparameters)
