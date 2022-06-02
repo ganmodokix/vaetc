@@ -11,8 +11,8 @@ sys.path.pop()
 if __name__ == "__main__":
 
     checkpoint = vaetc.Checkpoint(options={
-        "model_name": "vitae",
-        "dataset": "cifar10",
+        "model_name": "swae",
+        "dataset": "celeba",
         "batch_size": 256,
         "logger_path": "runs.tests/fid",
         "hyperparameters": yaml.safe_dump({
