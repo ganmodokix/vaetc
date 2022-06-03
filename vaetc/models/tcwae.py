@@ -93,15 +93,19 @@ class TCWAE(VAE):
             optimizers["main"].step()
 
         # ADVERSARIAL STEP (in the TCWAE-GAN case)
+        if self.estimator_type == "gan":
 
-        logits_fake = self.disc_block(z.detach())
-        logits_real = self.disc_block(permute_dims(z).detach())
-        loss_disc = -(logits_real[:,1] + logits_fake[:,0]).mean()
+            z = z.detach()
+            zp = permute_dims(z).detach()
 
-        if training:
-            self.zero_grad()
-            loss_disc.backward()
-            optimizers["disc"].step()
+            logits_fake = self.disc_block(z)
+            logits_real = self.disc_block(zp)
+            loss_disc = -(logits_real[:,1] + logits_fake[:,0]).mean()
+
+            if training:
+                self.zero_grad()
+                loss_disc.backward()
+                optimizers["disc"].step()
 
         # RETURNS
         if self.estimator_type == "mws":
