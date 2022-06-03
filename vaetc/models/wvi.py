@@ -25,6 +25,18 @@ class WVI(VAE):
         if self.w5 != 0:
             raise NotImplementedError("f-divergences not implemented")
 
+    def losses(self, x1, z1, x2, z2, gpz1, gpz2, hqx1, hqx2):
+
+        batch_size = x1.shape[0]
+
+        loss_ae = ((x1 - x2) ** 2).view(batch_size, -1).sum(dim=1).mean()
+        loss_pb = ((gpz1 - gpz2) ** 2).view(batch_size, -1).sum(dim=1).mean()
+        loss_la = (((z1 - hqx1) - (z2 - hqx2)) ** 2).sum(dim=1).mean()
+        loss_oa = ((x2 - gpz2) ** 2).view(batch_size, -1).sum(dim=1).mean()
+        # loss_fd = # not used
+
+        return loss_ae, loss_pb, loss_la, loss_oa
+
     def step_batch(self, batch, optimizers=None, progress=None, training=False):
 
         x, t = batch
@@ -42,12 +54,15 @@ class WVI(VAE):
 
         hqx1, _ = self.enc_block(x1)
         hqx2 = mean2
+        
+        loss_ae, loss_pb, loss_la, loss_oa = self.losses(x1, z1, x2, z2, gpz1, gpz2, hqx1, hqx2)
+        loss_ae_1, loss_pb_1, loss_la_1, loss_oa_1 = self.losses(x1, z1, x1, z1, gpz1, gpz1, hqx1, hqx1)
+        loss_ae_2, loss_pb_2, loss_la_2, loss_oa_2 = self.losses(x2, z2, x2, z2, gpz2, gpz2, hqx2, hqx2)
 
-        loss_ae = ((x1 - x2) ** 2).view(batch_size, -1).sum(dim=1).mean()
-        loss_pb = ((gpz1 - gpz2) ** 2).view(batch_size, -1).sum(dim=1).mean()
-        loss_la = (((z1 - hqx1) - (z2 - hqx2)) ** 2).sum(dim=1).mean()
-        loss_oa = ((x2 - gpz2) ** 2).view(batch_size, -1).sum(dim=1).mean()
-        # loss_fd = # not used
+        loss_ae = loss_ae - (loss_ae_1 + loss_ae_2) / 2
+        loss_pb = loss_pb - (loss_pb_1 + loss_pb_2) / 2
+        loss_la = loss_la - (loss_la_1 + loss_la_2) / 2
+        loss_oa = loss_oa - (loss_oa_1 + loss_oa_2) / 2
         
         loss = self.w1 * loss_ae \
              + self.w2 * loss_pb \

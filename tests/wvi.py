@@ -11,14 +11,13 @@ sys.path.pop()
 if __name__ == "__main__":
 
     checkpoint = vaetc.Checkpoint(options={
-        "model_name": "vitae",
-        "dataset": "cifar10",
+        "model_name": "wvi",
+        "dataset": "mnist",
         "batch_size": 256,
-        "logger_path": "runs.tests/fid",
+        "logger_path": "runs.tests/wvi",
         "hyperparameters": yaml.safe_dump({
             "lr": 1e-4,
-            "z_dim": 16,
-            "zp_dim": 14,
+            "z_dim": 64,
         }),
         "cuda_sync": True,
         "very_verbose": True,
