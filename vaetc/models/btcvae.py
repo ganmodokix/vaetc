@@ -13,8 +13,8 @@ def total_correlation(z: torch.Tensor, mean: torch.Tensor, logvar: torch.Tensor)
 
     log_qz_core = log_gaussian(z[:,None,:], mean[None,:,:], logvar[None,:,:])
 
-    log_qz_factorized = log_qz_core.logsumexp(dim=1).sum(dim=1)
-    log_qz = log_qz_core.sum(dim=2).logsumexp(dim=1)
+    log_qz = (log_qz_core.sum(dim=2).logsumexp(dim=1) - math.log(mean.shape[0])).mean()
+    log_qz_factorized = (log_qz_core.logsumexp(dim=1) - math.log(mean.shape[0])).sum(dim=1).mean()
 
     return log_qz - log_qz_factorized
 
