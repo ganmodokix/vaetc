@@ -71,3 +71,5 @@ from .swae import SWAE
 register_model("swae", SWAE)
 from .tcwae import TCWAE
 register_model("tcwae", TCWAE)
+from .wvi import WVI
+register_model("wvi", WVI)
