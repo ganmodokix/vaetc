@@ -16,14 +16,13 @@ if __name__ == "__main__":
         "batch_size": 256,
         "logger_path": "runs.tests/wvi",
         "hyperparameters": yaml.safe_dump({
-            "lr": 1e-4,
+            "lr": 1e-3,
             "z_dim": 64,
         }),
         "cuda_sync": True,
         "very_verbose": True,
-        "epochs": 1,
-        # "until_convergence": True,
-        # "patience": 10,
+        "until_convergence": True,
+        "patience": 5,
     })
 
     vaetc.fit(checkpoint)
