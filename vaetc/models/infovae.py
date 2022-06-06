@@ -5,17 +5,9 @@ import torch
 from .utils import detach_dict
 from vaetc.network.reparam import reparameterize
 from vaetc.network.losses import neglogpxz_gaussian, kl_gaussian
+from vaetc.network.kernel import mmd
+
 from .vae import VAE
-
-def kernel(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-
-    z_dim = x.shape[1]
-
-    return torch.exp(-((x[:,None,:] - y[None,:,:]) ** 2).mean(dim=2) / z_dim)
-    
-def mmd(x, y):
-
-    return kernel(x, x).mean() + kernel(y, y).mean() - 2 * kernel(x, y).mean()
 
 class MMDVAE(VAE):
     """ InfoVAE with the MMD divergence

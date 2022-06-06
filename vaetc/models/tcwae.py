@@ -7,10 +7,10 @@ from torch.nn import functional as F
 from vaetc.models.utils import detach_dict
 
 from vaetc.network.losses import neglogpxz_gaussian
+from vaetc.network.kernel import mmd
 
 from .vae import VAE
 from .btcvae import total_correlation
-from .infovae import mmd
 from .factorvae import Discriminator, permute_dims
 
 class TCWAE(VAE):
