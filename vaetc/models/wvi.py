@@ -1,3 +1,4 @@
+import math
 from typing import Optional
 import numpy as np
 
@@ -23,11 +24,13 @@ class WVI(VAE):
         self.w5 = float(hyperparameters.get("w5", 0))
         self.sinkhorn_iterations = int(hyperparameters.get("sinkhorn_iterations", 20))
         self.eps = float(hyperparameters.get("eps", 1e-2))
+        self.use_unbiased_estimator = bool(hyperparameters.get("use_unbiased_estimator", False))
+        self.detach_sinkhorn = bool(hyperparameters.get("detach_sinkhorn", True))
 
         if self.w5 != 0:
             raise NotImplementedError("f-divergences not implemented")
 
-    def losses(self, x1, z1, x2, z2, gpz1, gpz2, hqx1, hqx2):
+    def divergences(self, x1, z1, x2, z2, gpz1, gpz2, hqx1, hqx2):
 
         batch_size = x1.shape[0]
 
@@ -45,6 +48,52 @@ class WVI(VAE):
         # c_fd = # not used
 
         return c_ae, c_pb, c_la, c_oa
+
+    def sinkhorn(self, cost_matrix: torch.Tensor) -> torch.Tensor:
+
+        k = (-cost_matrix / self.eps).exp()
+        n, m = cost_matrix.shape
+        r = torch.ones_like(k[:,0:1]) / n
+        c = torch.ones_like(k[0:1,:]).T / m
+        kp = k / r
+        u = r
+        for t in range(self.sinkhorn_iterations):
+            v = c / (k.T @ u)
+            u = 1. / (kp @ v)
+            print(((k.T @ u - c) ** 2).sum())
+        s = u * k * v.T
+
+        return s
+
+    def sinkhorn_log(self, cost_matrix: torch.Tensor) -> torch.Tensor:
+
+        logk = -cost_matrix / self.eps
+        n, m = cost_matrix.shape
+        logr = torch.zeros(size=[n, 1], device=cost_matrix.device, dtype=cost_matrix.dtype) - math.log(n)
+        logc = torch.zeros(size=[m, 1], device=cost_matrix.device, dtype=cost_matrix.dtype) - math.log(m)
+        logu = torch.zeros_like(logr)
+        for t in range(self.sinkhorn_iterations):
+            logv = logc - (logk + logu).logsumexp(dim=0).unsqueeze(dim=1)
+            logu = logr - (logk + logv.T).logsumexp(dim=1).unsqueeze(dim=1)
+        logs = logu + logk + logv.T
+
+        return logs.exp()
+
+    def loss_by_sinkhorn(self, x1, z1, x2, z2, gpz1, gpz2, hqx1, hqx2):
+        
+        c_ae, c_pb, c_la, c_oa = self.divergences(x1, z1, x2, z2, gpz1, gpz2, hqx1, hqx2)
+        
+        cost_matrix = self.w1 * c_ae \
+             + self.w2 * c_pb \
+             + self.w3 * c_la \
+             + self.w4 * c_oa
+
+        s = self.sinkhorn_log(cost_matrix)
+        if self.detach_sinkhorn:
+            s = s.detach()
+        loss = (s * cost_matrix).sum()
+
+        return loss
 
     def step_batch(self, batch, optimizers=None, progress=None, training=False):
 
@@ -64,45 +113,32 @@ class WVI(VAE):
         hqx1, _ = self.enc_block(x1)
         hqx2 = mean2
         
-        c_ae, c_pb, c_la, c_oa = self.losses(x1, z1, x2, z2, gpz1, gpz2, hqx1, hqx2)
-        c_ae_1, c_pb_1, c_la_1, c_oa_1 = self.losses(x1, z1, x1, z1, gpz1, gpz1, hqx1, hqx1)
-        c_ae_2, c_pb_2, c_la_2, c_oa_2 = self.losses(x2, z2, x2, z2, gpz2, gpz2, hqx2, hqx2)
-
-        c_ae = c_ae - (c_ae_1 + c_ae_2) / 2
-        c_pb = c_pb - (c_pb_1 + c_pb_2) / 2
-        c_la = c_la - (c_la_1 + c_la_2) / 2
-        c_oa = c_oa - (c_oa_1 + c_oa_2) / 2
-        
-        cost_matrix = self.w1 * c_ae \
-             + self.w2 * c_pb \
-             + self.w3 * c_la \
-             + self.w4 * c_oa
-
-        # sinkhorn
-        k = (-cost_matrix / self.eps).exp()
-        n, m = k.shape
-        r = torch.ones_like(k[:,0:1]) / n
-        c = torch.ones_like(k[0:1,:]).T / m
-        u = r
-        for t in self.sinkhorn_iterations:
-            a = k.T @ u
-            b = c / a
-            u = m / (cost_matrix @ b)
-        v = c / (k.T @ u)
-        loss = (u * ((k * cost_matrix) @ v)).sum()
+        loss_pq = self.loss_by_sinkhorn(x1, z1, x2, z2, gpz1, gpz2, hqx1, hqx2)
+        if self.use_unbiased_estimator:
+            loss_pp = self.loss_by_sinkhorn(x1, z1, x1, z1, gpz1, gpz1, hqx1, hqx1)
+            loss_qq = self.loss_by_sinkhorn(x2, z2, x2, z2, gpz2, gpz2, hqx2, hqx2)
+            loss = loss_pq - (loss_pp + loss_qq) / 2
+        else:
+            loss = loss_pq
 
         if training:
             self.zero_grad()
             loss.backward()
             optimizers["main"].step()
         
-        return detach_dict({
+        loss_dict = detach_dict({
             "loss": loss,
-            "c_ae": c_ae,
-            "c_pb": c_pb,
-            "c_la": c_la,
-            "c_oa": c_oa,
+            "loss_pq": loss_pq,
         })
+
+        if self.use_unbiased_estimator:
+
+            loss_dict |= detach_dict({
+                "loss_pp": loss_pp,
+                "loss_qq": loss_qq,
+            })
+
+        return loss_dict
 
     def eval_batch(self, batch):
         return self.step_batch(batch, training=False)
