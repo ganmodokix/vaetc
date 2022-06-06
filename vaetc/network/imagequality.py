@@ -4,7 +4,7 @@ from torch.nn import functional as F
 
 def mse(x: torch.Tensor, x2: torch.Tensor):
     batch_size = x.shape[0]
-    return ((x - x2) ** 2).view(batch_size, -1).sum(dim=1)
+    return ((x - x2) ** 2).view(batch_size, -1).mean(dim=1)
 
 def cossim(x: torch.Tensor, x2: torch.Tensor):
 
@@ -46,4 +46,4 @@ def ssim(x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
 
     ssim_map = (2 * mm + c1) * (2 * cov + c2) / (s1 + s2 + c1) / (ss1 + ss2 + c2)
 
-    return ssim_map.view(batch_size, -1).sum(dim=1)
+    return ssim_map.view(batch_size, -1).mean(dim=1)
