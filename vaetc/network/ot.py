@@ -26,7 +26,7 @@ def sinkhorn(
 
     k = (-cost_matrix / eps).exp()
     kp = k / a
-    u = a
+    u = torch.ones_like(a) / n
     for t in range(num_iterations):
         v = b / (k.T @ u)
         u = 1. / (kp @ v)
