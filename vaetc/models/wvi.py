@@ -7,6 +7,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from vaetc.models.utils import detach_dict
+from vaetc.network.ot import sinkhorn, sinkhorn_log
 
 from .vae import VAE
 
@@ -51,33 +52,19 @@ class WVI(VAE):
 
     def sinkhorn(self, cost_matrix: torch.Tensor) -> torch.Tensor:
 
-        k = (-cost_matrix / self.eps).exp()
         n, m = cost_matrix.shape
-        r = torch.ones_like(k[:,0:1]) / n
-        c = torch.ones_like(k[0:1,:]).T / m
-        kp = k / r
-        u = r
-        for t in range(self.sinkhorn_iterations):
-            v = c / (k.T @ u)
-            u = 1. / (kp @ v)
-            print(((k.T @ u - c) ** 2).sum())
-        s = u * k * v.T
+        r = torch.ones(size=[n, 1], device=cost_matrix.device, dtype=cost_matrix.dtype) / n
+        c = torch.ones(size=[m, 1], device=cost_matrix.device, dtype=cost_matrix.dtype) / m
 
-        return s
+        return sinkhorn(r, c, cost_matrix, self.sinkhorn_iterations, self.eps)
 
     def sinkhorn_log(self, cost_matrix: torch.Tensor) -> torch.Tensor:
 
-        logk = -cost_matrix / self.eps
         n, m = cost_matrix.shape
         logr = torch.zeros(size=[n, 1], device=cost_matrix.device, dtype=cost_matrix.dtype) - math.log(n)
         logc = torch.zeros(size=[m, 1], device=cost_matrix.device, dtype=cost_matrix.dtype) - math.log(m)
-        logu = torch.zeros_like(logr)
-        for t in range(self.sinkhorn_iterations):
-            logv = logc - (logk + logu).logsumexp(dim=0).unsqueeze(dim=1)
-            logu = logr - (logk + logv.T).logsumexp(dim=1).unsqueeze(dim=1)
-        logs = logu + logk + logv.T
 
-        return logs.exp()
+        return sinkhorn_log(logr, logc, cost_matrix, self.sinkhorn_iterations, self.eps, ab_log=True)
 
     def loss_by_sinkhorn(self, x1, z1, x2, z2, gpz1, gpz2, hqx1, hqx2):
         
