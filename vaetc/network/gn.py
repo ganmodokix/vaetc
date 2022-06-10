@@ -24,7 +24,7 @@ def randgn(logbeta: np.ndarray, **factory_kwargs) -> torch.Tensor:
     logvar = 0
 
     if torch.is_tensor(logbeta):
-        return logbeta.detach().cpu().numpy()
+        logbeta = logbeta.detach().cpu().numpy()
 
     p = np.random.random(size=factory_kwargs["size"])
     q = gnppf(p, mu, logvar, logbeta)
