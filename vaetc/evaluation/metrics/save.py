@@ -1,7 +1,6 @@
 import gc
 import os
-from typing import Dict, List, Optional
-from matplotlib.colors import NoNorm
+from typing import Dict
 
 import yaml
 import numpy as np
@@ -9,9 +8,9 @@ from scipy.stats import sem
 import torch
 from tqdm import tqdm
 
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 
-from vaetc.evaluation.metrics.do2020.mutual import dcimig, modularity
+from vaetc.evaluation.metrics.generation import fid_gen
 
 from . import do2020
 from . import dci
@@ -23,8 +22,8 @@ from . import generation
 
 from vaetc.utils import debug_print
 from vaetc.checkpoint import Checkpoint
-from vaetc.models.abstract import RLModel, GaussianEncoderAutoEncoderRLModel
-from vaetc.evaluation.preprocess import encode_set, EncodedData
+from vaetc.models.abstract import RLModel
+from vaetc.evaluation.preprocess import EncodedData
 
 CELEBA_PROMINENT_ATTRIBUTES = [
     (4, "Bald"),
@@ -58,9 +57,9 @@ def evaluate_set(data: EncodedData, random_state: int = 42) -> Dict[str, float]:
 
     # Generation Quality
     if data.x2 is not None:
-        debug_print("Calculating FID...")
-        fid = generation.fid.fid(data.x, data.x2)
-        add_result("FID", fid)
+        debug_print("Calculating FID (Reconstruction)...")
+        fid = generation.fid_rec.fid(data.x, data.x2)
+        add_result("FID (Reconstruction)", fid)
     else:
         debug_print("FID skipped; no generation")
         
@@ -162,6 +161,7 @@ def evaluate_set(data: EncodedData, random_state: int = 42) -> Dict[str, float]:
 def measure(model: RLModel, dataset: Dataset, logger_path: str, suffix: str, num_measurement: int = 1):
 
     data = EncodedData(model, dataset)
+    batch_size = data.batch_size
 
     # ==================================================
     # for additional evaluations
@@ -178,6 +178,16 @@ def measure(model: RLModel, dataset: Dataset, logger_path: str, suffix: str, num
 
         evaluations = evaluate_set(data)
         evaluations_sets.append(evaluations)
+    
+    del data
+    gc.collect()
+
+    for k in range(num_measurement):
+        debug_print(f"FID (Generation) Measurement {k+1}/{num_measurement} ...")
+        fid = fid_gen.fid_generation(model, dataset, batch_size=batch_size)
+        evaluations_sets[k]["FID (Generation)"] = float(fid)
+    
+    gc.collect()
 
     evaluations_mean, evaluations_se = {}, {}
     for key in evaluations_sets[0]:
@@ -186,16 +196,22 @@ def measure(model: RLModel, dataset: Dataset, logger_path: str, suffix: str, num
         if num_measurement >= 2:
             evaluations_se[key] = float(sem(values))
 
-    with open(os.path.join(logger_path, f"metrics_{suffix}.yaml"), "w") as fp:
+    output_path = os.path.join(logger_path, f"metrics_{suffix}.yaml")
+    with open(output_path, "w") as fp:
         yaml.safe_dump(evaluations_mean, fp)
-    
+    debug_print(f"Evaluation Means Output at {output_path}")
+
     if num_measurement >= 2:
-        with open(os.path.join(logger_path, f"metrics_{suffix}_se.yaml"), "w") as fp:
+        output_path = os.path.join(logger_path, f"metrics_{suffix}_se.yaml")
+        with open(output_path, "w") as fp:
             yaml.safe_dump(evaluations_se, fp)
+        debug_print(f"Evaluation SEM Output at {output_path}")
     
     for k in range(num_measurement):
-        with open(os.path.join(logger_path, f"metrics_{suffix}_{k}.yaml"), "w") as fp:
+        output_path = os.path.join(logger_path, f"metrics_{suffix}_{k}.yaml")
+        with open(output_path, "w") as fp:
             yaml.safe_dump(evaluations_sets[k], fp)
+        debug_print(f"Evaluation {k+1}/{num_measurement} Output at {output_path}")
 
 def evaluate(checkpoint: Checkpoint):
 

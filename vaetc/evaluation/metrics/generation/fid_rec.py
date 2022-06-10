@@ -89,6 +89,7 @@ def build_features_inception_v3():
     return features, transform
 
 def fid(x_real: np.ndarray, x_gen: np.ndarray) -> float:
+    """ Reconstruction FID """
 
     features, transform = build_features_inception_v3()
 
