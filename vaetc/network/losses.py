@@ -1,6 +1,8 @@
+import math
+from typing import Union
 import torch
 
-from torch import nn
+from torch import is_tensor, nn
 from torch.nn import functional as F
 
 def kl_gaussian(mean: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
@@ -19,24 +21,43 @@ def kl_gaussian(mean: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
 
     return 0.5 * torch.sum(mean ** 2 + var - logvar - 1, dim=-1)
 
-def neglogpxz_gaussian(x: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
+def neglogpxz_gaussian(x: torch.Tensor, x2: torch.Tensor, **kwargs) -> torch.Tensor:
     """
     Reconstruction loss in a von Mises-Fisher posterior
 
     Args:
         x (torch.Tensor): :math:`\\mathbf{x}`
         x2 (torch.Tensor): :math:`\\mathbf{\\hat{x}}`
+        sigma (torch.Tensor | float): :math:`\\sigma`
+        log_sigma (torch.Tensor | float): :math:`\\log \\sigma`
 
     Note:
         The normalization constant is not included.
     
     Returns:
-        torch.Tensor: :math:`-\\log\\mathcal{N}(\\mathbf{x}|\\mathbf{\\hat{x}}, \\boldsymbol{I})` (without const.)
+        torch.Tensor: :math:`-\\log\\mathcal{N}(\\mathbf{x}|\\mathbf{\\hat{x}}, \\sigma \\boldsymbol{I})` (without const.)
     """
 
-    xf = x.view(x.shape[0], -1)
-    x2f = x2.view(x2.shape[0], -1)
-    return 0.5 * torch.sum((xf - x2f) ** 2, dim=-1)
+    batch_size = x.shape[0]
+
+    if "log_gamma" in kwargs:
+        log_gamma = kwargs["log_gamma"]
+        if torch.is_tensor(log_gamma):
+            gamma = torch.exp(log_gamma)
+        else:
+            gamma = math.exp(gamma)
+    elif "gamma" in kwargs:
+        gamma = kwargs["gamma"]
+        if torch.is_tensor(gamma):
+            log_gamma = torch.log(gamma)
+        else:
+            log_gamma = math.log(gamma)
+    else:
+        log_gamma = 0
+        gamma = 1
+    
+    gamma = kwargs["gamma"] if "gamma" in kwargs else 1
+    return 0.5 * ((x - x2) ** 2 / gamma + math.log(math.pi * 2) + log_gamma).view(batch_size, -1).sum(dim=1)
 
 def neglogpxz_von_mises_fisher(x, x2):
     """
