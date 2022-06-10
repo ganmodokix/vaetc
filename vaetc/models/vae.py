@@ -237,7 +237,7 @@ class VAE(GaussianEncoderAutoEncoderRLModel):
         
         return neglogpxz(x, x2, distribution=self.decoder_distribution, )
 
-    def regularization_term(self, mean, logvar, **kwargs):
+    def regularization_term(self, mean, logvar):
 
         return kl_encoder_prior(
             mean, logvar,
@@ -276,7 +276,7 @@ class VAE(GaussianEncoderAutoEncoderRLModel):
 
         # losses
         loss_ae  = torch.mean(self.reconstruction_term(x, x2))
-        loss_reg = torch.mean(kl_gaussian(mean, logvar))
+        loss_reg = torch.mean(self.regularization_term(mean, logvar))
 
         # Total loss
         loss = loss_ae + loss_reg
