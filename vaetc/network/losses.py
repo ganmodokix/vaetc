@@ -191,7 +191,7 @@ def kl_gn_gn(
 
     neg_entropy_enc = -invbeta_enc + logbeta_enc - math.log(2) - logs2_enc * 0.5 - loggib_enc
 
-    eps = randgn(logbeta_enc, device=logbeta_enc.device, size=[logbeta_enc.shape[0], num_sampling, mean.shape[1]])
+    eps = randgn(logbeta_enc, device=logbeta_enc.device, size=[mean.shape[0], num_sampling, mean.shape[1]])
     z = mean[:,None,:] + (logvar * 0.5).exp()[:,None,:] * eps
 
     return (neg_entropy_enc - math.log(2) - loggib_prior + (z.abs() ** beta_prior).mean(dim=1)).sum(dim=1)
