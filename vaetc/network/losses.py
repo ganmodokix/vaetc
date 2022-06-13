@@ -77,7 +77,8 @@ def neglogpxz_von_mises_fisher(x, x2):
         torch.Tensor: :math:`-\\log\\mathrm{vMF}(\\mathbf{x}|\\mathbf{\\hat{x}}, \\frac{1}{2})` (without const.)
     """
 
-    return -0.5 * (F.normalize(x, dim=1) * F.normalize(x2, dim=1)).sum(dim=1)
+    batch_size = x.shape[0]
+    return -0.5 * (F.normalize(x.view(batch_size, -1), dim=1) * F.normalize(x2.view(batch_size, -1), dim=1)).sum(dim=1)
 
 def neglogpxz_bernoulli(x, x2):
     """
