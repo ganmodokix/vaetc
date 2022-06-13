@@ -235,7 +235,7 @@ class VAE(GaussianEncoderAutoEncoderRLModel):
         else:
             decoder_parameters["loggamma"] = math.log(self.decoder_variance)
         
-        return neglogpxz(x, x2, distribution=self.decoder_distribution, )
+        return neglogpxz(x, x2, distribution=self.decoder_distribution, **decoder_parameters)
 
     def regularization_term(self, mean, logvar):
 
@@ -262,7 +262,8 @@ class VAE(GaussianEncoderAutoEncoderRLModel):
             
             if self.encoder_distribution == "laplace":
                 logbeta = 0
-            logbeta = self.kl_shape_parameters["encoder_logbeta"] if "encoder_logbeta" in self.kl_shape_parameters else self.kl_shape_parameters["encoder_beta"]
+            else:
+                logbeta = self.kl_shape_parameters["encoder_logbeta"] if "encoder_logbeta" in self.kl_shape_parameters else self.kl_shape_parameters["encoder_beta"]
 
             eps = randgn(logbeta, dtype=mean.dtype, size=mean.shape, device=mean.device)
             return mean + (logvar * 0.5).exp() * eps
