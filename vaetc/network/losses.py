@@ -172,7 +172,7 @@ def kl_gn_gn(
     logvar: torch.Tensor,
     logbeta_enc: torch.Tensor,
     logbeta_prior: torch.Tensor,
-    num_sampling: int = 100
+    num_sampling: int = 5
 ):
     """
     [Bouhlel & Dziri, 2019 (https://ieeexplore.ieee.org/document/8707051)]
