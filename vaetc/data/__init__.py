@@ -11,6 +11,7 @@ from .getchu import getchu
 from .kmnist import kmnist
 from .lsun import lsun_bedroom
 from .mnist import mnist
+from .fashionmnist import fashionmnist
 from .omniglot import omniglot
 from .stl10 import stl10
 from .svhn import svhn
