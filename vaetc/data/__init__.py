@@ -16,6 +16,7 @@ from .omniglot import omniglot
 from .stl10 import stl10
 from .svhn import svhn
 from .widerface import widerface
+from .food101 import food101
 
 from .dsprites import dsprites
 from .shapes3d import shapes3d
