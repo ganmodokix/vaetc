@@ -135,7 +135,7 @@ def train_one_epoch(checkpoint: Checkpoint, loader_train: DataLoader, epoch: int
         if not checkpoint.options.get("until_convergence", False) and "lr_decay" in checkpoint.options:
             lr_decay = float(checkpoint.options["lr_decay"])
             lr_multiplier = lr_decay ** progress
-            lr_original = float(checkpoint.options["hyperparameters"]["lr"])
+            lr_original = float(yaml.safe_load(checkpoint.options["hyperparameters"])["lr"])
             lr_current = lr_original * lr_multiplier
             for g in checkpoint.optimizers["main"].param_groups:
                 g["lr"] = lr_current
