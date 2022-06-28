@@ -132,13 +132,13 @@ def train_one_epoch(checkpoint: Checkpoint, loader_train: DataLoader, epoch: int
         progress = batch_index_entire / num_batches_entire
 
         # # LR decay
-        # if "lr_decay" in checkpoint.options:
-        #     lr_decay = checkpoint.options["lr_decay"]
-        #     lr_multiplier = lr_decay ** progress
-        #     lr_original = checkpoint.options["hyperparameters"]["lr"]
-        #     lr_current = lr_original * lr_multiplier
-        #     for g in checkpoint.optimizers["main"].param_groups:
-        #         g["lr"] = lr_current
+        if "lr_decay" in checkpoint.options:
+            lr_decay = checkpoint.options["lr_decay"]
+            lr_multiplier = lr_decay ** progress
+            lr_original = checkpoint.options["hyperparameters"]["lr"]
+            lr_current = lr_original * lr_multiplier
+            for g in checkpoint.optimizers["main"].param_groups:
+                g["lr"] = lr_current
         
         loss_dict = checkpoint.model.train_batch(batch, checkpoint.optimizers, progress)
         history_steps.append(loss_dict)

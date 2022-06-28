@@ -36,27 +36,27 @@ def neglogpxz(x: torch.Tensor, x2: torch.Tensor, distribution: str, *args, **kwa
         return neglogpxz_continuous_bernoulli(x, x2)
     elif distribution == "mse-cossim":
         num_pixels = x.nelement() / x.shape[0]
-        negsim = mse(x, x2) - cossim(x, x2)
+        negsim = mse(x, x2) + 1-cossim(x, x2)
         return (negsim / loggamma.exp() + loggamma + math.log(2 * math.pi)) * num_pixels
     elif distribution == "mse-ssim":
         num_pixels = x.nelement() / x.shape[0]
-        negsim = mse(x, x2) - ssim(x, x2)
+        negsim = mse(x, x2) + 1-ssim(x, x2)
         return (negsim / loggamma.exp() + loggamma + math.log(2 * math.pi)) * num_pixels
     elif distribution == "-cossim-ssim":
         num_pixels = x.nelement() / x.shape[0]
-        negsim = - cossim(x, x2) - ssim(x, x2)
+        negsim = 1-cossim(x, x2) + 1-ssim(x, x2)
         return (negsim / loggamma.exp() + loggamma + math.log(2 * math.pi)) * num_pixels
     elif distribution == "-cossim":
         num_pixels = x.nelement() / x.shape[0]
-        negsim = - cossim(x, x2)
+        negsim = 1-cossim(x, x2)
         return (negsim / loggamma.exp() + loggamma + math.log(2 * math.pi)) * num_pixels
     elif distribution == "-ssim":
         num_pixels = x.nelement() / x.shape[0]
-        negsim = - ssim(x, x2)
+        negsim = 1-ssim(x, x2)
         return (negsim / loggamma.exp() + loggamma + math.log(2 * math.pi)) * num_pixels
     elif distribution == "mse-cossim-ssim":
         num_pixels = x.nelement() / x.shape[0]
-        negsim = mse(x, x2) - cossim(x, x2) - ssim(x, x2)
+        negsim = mse(x, x2) + 1-cossim(x, x2) + 1-ssim(x, x2)
         return (negsim / loggamma.exp() + loggamma + math.log(2 * math.pi)) * num_pixels
     elif distribution == "laplace":
         return neglogpxz_gn(x, x2, 0)
