@@ -83,9 +83,9 @@ class VAEGAN(VAE):
         disc_parameters = self.disc_block.parameters()
         
         return {
-            "enc": torch.optim.Adam(enc_parameters, lr=self.lr, betas=(0.9, 0.999)),
-            "dec": torch.optim.Adam(dec_parameters, lr=self.lr, betas=(0.9, 0.999)),
-            "disc": torch.optim.Adam(disc_parameters, lr=self.lr_disc, betas=(0.5, 0.9)),
+            "enc": torch.optim.RMSprop(enc_parameters, lr=self.lr),
+            "dec": torch.optim.RMSprop(dec_parameters, lr=self.lr),
+            "disc": torch.optim.RMSprop(disc_parameters, lr=self.lr_disc),
         }
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
