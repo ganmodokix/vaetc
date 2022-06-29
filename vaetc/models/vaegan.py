@@ -106,7 +106,7 @@ class VAEGAN(VAE):
     def loss(self, x, z, mean, logvar, x2, h, h2, hp, logit, logit2, logitp, progress: Optional[float] = None):
 
         # losses
-        loss_ae  = torch.mean(neglogpxz_gaussian(x, x2))
+        loss_ae  = torch.mean(self.reconstruction_term(x, x2))
         loss_reg = torch.mean(kl_gaussian(mean, logvar))
 
         loss_ae_disc = []
