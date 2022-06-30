@@ -38,7 +38,7 @@ class SoftIntroVAE(VAE):
 
     def loss_both(self, x, z, mean, logvar, x2):
 
-        loss_rec = neglogpxz_gaussian(x, x2).mean()
+        loss_rec = self.reconstruction_term(x, x2).mean()
         loss_kl  = kl_gaussian(mean, logvar).mean()
         loss_both = loss_rec * self.beta_rec + loss_kl * self.beta_kl
 
@@ -61,9 +61,9 @@ class SoftIntroVAE(VAE):
         x2f = self.decode(z2f)
         xff = self.decode(zff)
 
-        elbo   = -s * (self.beta_rec * neglogpxz_gaussian(x , x2 ) + self.beta_kl  * kl_gaussian(mean  , logvar  ))
-        elbo_r = -s * (self.beta_rec * neglogpxz_gaussian(x2, x2f) + self.beta_neg * kl_gaussian(mean2f, logvar2f))
-        elbo_f = -s * (self.beta_rec * neglogpxz_gaussian(xf, xff) + self.beta_neg * kl_gaussian(meanff, logvarff))
+        elbo   = -s * (self.beta_rec * self.reconstruction_term(x , x2 ) + self.beta_kl  * kl_gaussian(mean  , logvar  ))
+        elbo_r = -s * (self.beta_rec * self.reconstruction_term(x2, x2f) + self.beta_neg * kl_gaussian(mean2f, logvar2f))
+        elbo_f = -s * (self.beta_rec * self.reconstruction_term(xf, xff) + self.beta_neg * kl_gaussian(meanff, logvarff))
 
         exp_elbo_r = 0.5 * torch.exp(2 * elbo_r)
         exp_elbo_f = 0.5 * torch.exp(2 * elbo_f)
@@ -92,9 +92,9 @@ class SoftIntroVAE(VAE):
         x2f = self.decode(z2f.detach())
         xff = self.decode(zff.detach())
 
-        elbo   = -s * self.beta_rec * neglogpxz_gaussian(x, x2)
-        elbo_r = -s * (self.gamma_r * self.beta_rec * neglogpxz_gaussian(x2, x2f) + self.beta_kl * kl_gaussian(mean2f, logvar2f))
-        elbo_f = -s * (self.gamma_r * self.beta_rec * neglogpxz_gaussian(xf, xff) + self.beta_kl * kl_gaussian(meanff, logvarff))
+        elbo   = -s * self.beta_rec * self.reconstruction_term(x, x2)
+        elbo_r = -s * (self.gamma_r * self.beta_rec * self.reconstruction_term(x2, x2f) + self.beta_kl * kl_gaussian(mean2f, logvar2f))
+        elbo_f = -s * (self.gamma_r * self.beta_rec * self.reconstruction_term(xf, xff) + self.beta_kl * kl_gaussian(meanff, logvarff))
 
         loss_dec = -torch.mean(elbo + 0.5 * (elbo_r + elbo_f))
 

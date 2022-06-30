@@ -39,7 +39,7 @@ class IntroVAE(VAE):
 
     def loss_enc(self, x, z, mean, logvar, x2):
 
-        loss_ae = torch.mean(neglogpxz_gaussian(x, x2))
+        loss_ae = torch.mean(self.reconstruction_term(x, x2))
 
         zp = torch.randn_like(z)
         xp = self.decode(zp)
@@ -64,7 +64,7 @@ class IntroVAE(VAE):
 
     def loss_dec(self, x, z, mean, logvar, x2):
 
-        loss_ae = torch.mean(neglogpxz_gaussian(x, x2))
+        loss_ae = torch.mean(self.reconstruction_term(x, x2))
 
         zp = torch.randn_like(z)
         xp = self.decode(zp)
