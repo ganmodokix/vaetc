@@ -44,7 +44,7 @@ def ssim_window_stats(x1: torch.Tensor, x2: torch.Tensor, window_size: int = 11)
 def ssim_comparisons(m1: torch.Tensor, m2: torch.Tensor, ss1: torch.Tensor, ss2: torch.Tensor, cov: torch.Tensor, c1: float, c2: float, c3: float):
 
     eps = 1e-8 # to prevent nan grad
-    s1s2 = (ss1 * ss2 + eps) ** 0.5
+    s1s2 = (ss1 * ss2).clamp_min(eps) ** 0.5
 
     l = (2 * m1 * m2 + c1) / (m1 ** 2 + m2 ** 2 + c1)
     c = (2 * s1s2 + c2) / (ss1 + ss2 + c2)
