@@ -51,7 +51,7 @@ def ssim_comparisons(m1: torch.Tensor, m2: torch.Tensor, ss1: torch.Tensor, ss2:
 
     return l, c, s
 
-def ssim(x1: torch.Tensor, x2: torch.Tensor, alpha: float = 1.0, beta: float = 1.0, gamma: float = 1.0) -> torch.Tensor:
+def ssim(x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
 
     batch_size = x1.shape[0]
     num_channels = x1.shape[1]
@@ -63,10 +63,11 @@ def ssim(x1: torch.Tensor, x2: torch.Tensor, alpha: float = 1.0, beta: float = 1
     k1, k2 = 0.01, 0.03
     c1 = (k1 * value_range) ** 2
     c2 = (k2 * value_range) ** 2
-    c3 = c2 / 2
+    # c3 = c2 / 2
 
-    l, c, s = ssim_comparisons(m1, m2, ss1, ss2, cov, c1, c2, c3)
-    ssim_map = l ** alpha + c ** beta + s ** gamma
+    # l, c, s = ssim_comparisons(m1, m2, ss1, ss2, cov, c1, c2, c3)
+    # ssim_map = l ** alpha + c ** beta + s ** gamma
+    ssim_map = (2 * m1 * m2 + c1) * (2 * cov + c2) / (m1 ** 2 + m2 ** 2 + c1) / (ss1 + ss2 + c2)
 
     return ssim_map.view(batch_size, -1).mean(dim=1)
 
