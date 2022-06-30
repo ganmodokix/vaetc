@@ -12,7 +12,7 @@ from vaetc.network.cnn import ConvGaussianEncoder, ConvDecoder
 from vaetc.network.losses import kl_gaussian, kl_gn_gaussian, kl_gn_gn, kl_uniform_gaussian, kl_uniform_gn
 from vaetc.network.losses import neglogpxz_bernoulli, neglogpxz_continuous_bernoulli, neglogpxz_gaussian, neglogpxz_von_mises_fisher
 from vaetc.network.losses import neglogpxz_gn
-from vaetc.network.imagequality import mse, cossim, ssim
+from vaetc.network.imagequality import mse, cossim, ssim, msssim
 from vaetc.network.gn import randgn
 
 from .utils import detach_dict
@@ -57,6 +57,9 @@ def neglogpxz(x: torch.Tensor, x2: torch.Tensor, distribution: str, *args, **kwa
     elif distribution == "mse-cossim-ssim":
         num_pixels = x.nelement() / x.shape[0]
         negsim = mse(x, x2) + 1-cossim(x, x2) + 1-ssim(x, x2)
+    elif distribution == "mse-cossim-msssim":
+        num_pixels = x.nelement() / x.shape[0]
+        negsim = mse(x, x2) + 1-cossim(x, x2) + 1-msssim(x, x2)
         return (negsim / loggamma.exp() + loggamma + math.log(2 * math.pi)) * num_pixels
     elif distribution == "laplace":
         return neglogpxz_gn(x, x2, 0)
