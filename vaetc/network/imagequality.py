@@ -92,14 +92,14 @@ def msssim(x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
     for i, (beta, gamma) in enumerate(zip(betas, gammas)):
         m1, m2, ss1, ss2, cov = ssim_window_stats(h1, h2, window_size=window_size)
         l, c, s = ssim_comparisons(m1, m2, ss1, ss2, cov, c1, c2, c3)
-        cs += [c ** beta]
-        ss += [s ** gamma]
+        cs += [c.view(batch_size, -1).mean() ** beta]
+        ss += [s.view(batch_size, -1).mean() ** gamma]
         if i+1 < m:
             h1 = F.avg_pool2d(h1, kernel_size=2, padding=(h1.shape[2] % 2, h1.shape[3] % 2))
             h2 = F.avg_pool2d(h2, kernel_size=2, padding=(h2.shape[2] % 2, h2.shape[3] % 2))
 
     # note that the l in the last level is used
-    l = l ** alpha
+    l = l.view(batch_size, -1).mean() ** alpha
     c = torch.stack(cs, dim=0).prod(dim=0)
     s = torch.stack(ss, dim=0).prod(dim=0)
     
