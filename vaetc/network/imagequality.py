@@ -59,7 +59,7 @@ def ssim(x1: torch.Tensor, x2: torch.Tensor, alpha: float = 1.0, beta: float = 1
 
     m1, m2, ss1, ss2, cov = ssim_window_stats(x1, x2, window_size=window_size)
 
-    value_range = max(x1.max().item(), x2.max().item()) - min(x1.min().item(), x2.min().item())
+    value_range = max(x1.max().item(), x2.max().item())
     k1, k2 = 0.01, 0.03
     c1 = (k1 * value_range) ** 2
     c2 = (k2 * value_range) ** 2
@@ -91,7 +91,7 @@ def msssim(x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
     cs, ss = [], []
     for i, (beta, gamma) in enumerate(zip(betas, gammas)):
         m1, m2, ss1, ss2, cov = ssim_window_stats(h1, h2, window_size=window_size)
-        l, c, s = ssim_comparisons(m1, m2, ss1, ss2, cov, c1, x2, c3)
+        l, c, s = ssim_comparisons(m1, m2, ss1, ss2, cov, c1, c2, c3)
         cs += [c ** beta]
         ss += [s ** gamma]
         if i+1 < m:
