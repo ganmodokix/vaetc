@@ -43,7 +43,7 @@ def ssim_window_stats(x1: torch.Tensor, x2: torch.Tensor, window_size: int = 11)
 
 def ssim_comparisons(m1: torch.Tensor, m2: torch.Tensor, ss1: torch.Tensor, ss2: torch.Tensor, cov: torch.Tensor, c1: float, c2: float, c3: float):
 
-    eps = 1e-8 # to prevent nan
+    eps = 1e-8 # to prevent nan grad
     s1s2 = (ss1 * ss2 + eps) ** 0.5
 
     l = (2 * m1 * m2 + c1) / (m1 ** 2 + m2 ** 2 + c1)
@@ -91,11 +91,14 @@ def msssim(x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
 
     h1, h2 = x1, x2
     cs, ss = [], []
+    eps = 1e-8
     for i, (beta, gamma) in enumerate(zip(betas, gammas)):
         m1, m2, ss1, ss2, cov = ssim_window_stats(h1, h2, window_size=window_size)
         l, c, s = ssim_comparisons(m1, m2, ss1, ss2, cov, c1, c2, c3)
-        cs += [c.reshape(batch_size, -1).mean(dim=-1) ** beta]
-        ss += [s.reshape(batch_size, -1).mean(dim=-1) ** gamma]
+        c = c.reshape(batch_size, -1).mean(dim=-1)
+        s = s.reshape(batch_size, -1).mean(dim=-1)
+        cs += [c.clamp_min(eps) ** beta]
+        ss += [s.clamp_min(eps) ** gamma]
         if i+1 < m:
             h1 = F.avg_pool2d(h1, kernel_size=2, padding=(h1.shape[2] % 2, h1.shape[3] % 2))
             h2 = F.avg_pool2d(h2, kernel_size=2, padding=(h2.shape[2] % 2, h2.shape[3] % 2))
