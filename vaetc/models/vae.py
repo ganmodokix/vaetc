@@ -57,6 +57,7 @@ def neglogpxz(x: torch.Tensor, x2: torch.Tensor, distribution: str, *args, **kwa
     elif distribution == "mse-cossim-ssim":
         num_pixels = x.nelement() / x.shape[0]
         negsim = mse(x, x2) + 1-cossim(x, x2) + 1-ssim(x, x2)
+        return (negsim / loggamma.exp() + loggamma + math.log(2 * math.pi)) * num_pixels
     elif distribution == "mse-cossim-msssim":
         num_pixels = x.nelement() / x.shape[0]
         negsim = mse(x, x2) + 1-cossim(x, x2) + 1-msssim(x, x2)
