@@ -60,7 +60,8 @@ def ssim(x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
 
     m1, m2, ss1, ss2, cov = ssim_window_stats(x1, x2, window_size=window_size)
 
-    value_range = max(x1.max().item(), x2.max().item())
+    # value_range = max(x1.max().item(), x2.max().item())
+    value_range = 1
     k1, k2 = 0.01, 0.03
     c1 = (k1 * value_range) ** 2
     c2 = (k2 * value_range) ** 2
@@ -83,7 +84,8 @@ def msssim(x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
     gammas = [0.0447, 0.2856, 0.3001, 0.2363, 0.1333]
     m = len(gammas)
 
-    value_range = max(x1.max().item(), x2.max().item())
+    # value_range = max(x1.max().item(), x2.max().item())
+    value_range = 1
     k1, k2 = 0.01, 0.03
     c1 = (k1 * value_range) ** 2
     c2 = (k2 * value_range) ** 2
