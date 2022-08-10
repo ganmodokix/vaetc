@@ -50,7 +50,7 @@ class ResBlock(nn.Module):
     def __init__(self, num_channels: int, inplace: bool = True, batchnorm: bool = False, batchnorm_momentum: float = 0.1) -> None:
         super().__init__()
 
-        padding_mode = "zeros" if torch.are_deterministic_algorithms_enabled() else "replicate"
+        padding_mode = "zeros"
 
         layers = [
             nn.Conv2d(num_channels, num_channels, 1, 1, 0, padding_mode=padding_mode),
@@ -85,7 +85,7 @@ class NVAEGenerativeResidualCell(nn.Module):
         c = self.num_features
         ec = self.num_features * self.e_features
 
-        padding_mode = "zeros" if torch.are_deterministic_algorithms_enabled() else "replicate"
+        padding_mode = "zeros"
         self.residual_module = nn.Sequential(
             nn.BatchNorm2d(c, momentum=self.bn_momentum),
             nn.Conv2d(c, ec, kernel_size=1, stride=1, padding=0, padding_mode=padding_mode),
@@ -118,7 +118,7 @@ class NVAEInferenceResidualCell(nn.Module):
         self.bn_momentum = float(bn_momentum)
 
         c = self.num_features
-        padding_mode = "zeros" if torch.are_deterministic_algorithms_enabled() else "replicate"
+        padding_mode = "zeros"
         self.residual_module = nn.Sequential(
             nn.BatchNorm2d(c, momentum=self.bn_momentum),
             nn.SiLU(inplace=True),

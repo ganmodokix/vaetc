@@ -23,7 +23,7 @@ class Discriminator(nn.Module):
         self.x_shape = tuple(map(int, x_shape))
         self.z_dim = int(z_dim)
 
-        padding_mode = "zeros" if torch.are_deterministic_algorithms_enabled() else "replicate"
+        padding_mode = "zeros"
         self.features = nn.Sequential(
             nn.Conv2d(self.x_shape[0], 64, 4, 2, 1, padding_mode=padding_mode),
             nn.Dropout2d(0.2, True),
