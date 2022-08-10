@@ -109,9 +109,9 @@ class ConvDecoder(nn.Module):
 
         layers_fc = [
             nn.Linear(self.z_dim, 256),
-            nn.SiLU(inplace),
+            nn.LeakyReLU(0.2, inplace),
             nn.Linear(256, hidden_filters[0] * 4 * 4),
-            nn.SiLU(inplace),
+            nn.LeakyReLU(0.2, inplace),
             nn.Unflatten(1, [hidden_filters[0], 4, 4]),
         ]
 
@@ -120,7 +120,7 @@ class ConvDecoder(nn.Module):
             
             unit = [
                 nn.ConvTranspose2d(in_filters, out_filters, 4, stride=2, padding=1, padding_mode="zeros"),
-                nn.SiLU(inplace),
+                nn.LeakyReLU(0.2, inplace),
                 nn.BatchNorm2d(out_filters, momentum=batchnorm_momentum) if batchnorm else None,
                 ResBlock(out_filters, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
                 ResBlock(out_filters, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
@@ -131,7 +131,7 @@ class ConvDecoder(nn.Module):
         last_filters = hidden_filters[-1]
         layers_conv += [
             nn.ConvTranspose2d(last_filters, last_filters, 4, stride=2, padding=1, padding_mode="zeros"),
-            nn.SiLU(inplace),
+            nn.LeakyReLU(0.2, inplace),
             nn.BatchNorm2d(last_filters, momentum=batchnorm_momentum) if batchnorm else None,
             ResBlock(last_filters, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
             ResBlock(last_filters, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
