@@ -25,7 +25,7 @@ class ConvEncoder(nn.Module):
         layers_conv = []
         layers_conv += [
             nn.Conv2d(self.in_features, hidden_filters[0], 4, stride=2, padding=1, padding_mode=padding_mode),
-            nn.SiLU(inplace),
+            nn.LeakyReLU(0.2, inplace),
             nn.BatchNorm2d(hidden_filters[0], momentum=batchnorm_momentum) if batchnorm else None,
             ResBlock(hidden_filters[0], batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
             ResBlock(hidden_filters[0], batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
@@ -33,7 +33,7 @@ class ConvEncoder(nn.Module):
         for in_filters, out_filters in zip(hidden_filters[:-1], hidden_filters[1:]):
             layers_conv += [
                 nn.Conv2d(in_filters, out_filters, 4, stride=2, padding=1, padding_mode=padding_mode),
-                nn.SiLU(inplace),
+                nn.LeakyReLU(0.2, inplace),
                 nn.BatchNorm2d(out_filters, momentum=batchnorm_momentum) if batchnorm else None,
                 ResBlock(out_filters, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
                 ResBlock(out_filters, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
@@ -42,7 +42,7 @@ class ConvEncoder(nn.Module):
         layers_fc = [
             nn.Flatten(),
             nn.Linear(hidden_filters[-1] * 4 * 4, 256),
-            nn.SiLU(inplace),
+            nn.LeakyReLU(0.2, inplace),
         ]
 
         layers = [SigmoidInverse()] + layers_conv + layers_fc
