@@ -130,7 +130,12 @@ class ConvDecoder(nn.Module):
             
         last_filters = hidden_filters[-1]
         layers_conv += [
-            nn.ConvTranspose2d(last_filters, self.out_features, 4, stride=2, padding=1, padding_mode="zeros"),
+            nn.ConvTranspose2d(last_filters, last_filters, 4, stride=2, padding=1, padding_mode="zeros"),
+            nn.LeakyReLU(0.2, inplace),
+            nn.BatchNorm2d(last_filters, momentum=batchnorm_momentum) if batchnorm else None,
+            ResBlock(last_filters, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
+            ResBlock(last_filters, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
+            nn.Conv2d(last_filters, self.out_features, 5, 1, 2, padding_mode="zeros"),
         ]
 
         layers = layers_fc + layers_conv + [nn.Sigmoid()]
