@@ -3,7 +3,8 @@ from torch import nn
 from torch.nn import functional as F
 from .blocks import SigmoidInverse, ResBlock
 
-STANDARD_ARCHITECTURE = [32, 64, 128, 256]
+# STANDARD_ARCHITECTURE = [32, 64, 128, 256]
+STANDARD_ARCHITECTURE = [128, 256, 512, 1024]
 
 class ConvEncoder(nn.Module):
     """ A convolutional encoder, the same as :class:`ConvGaussianEncoder` without logvar """
