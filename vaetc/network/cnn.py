@@ -3,6 +3,8 @@ from torch import nn
 from torch.nn import functional as F
 from .blocks import SigmoidInverse, ResBlock
 
+STANDARD_ARCHITECTURE = [32, 64, 128, 256]
+
 class ConvEncoder(nn.Module):
     """ A convolutional encoder, the same as :class:`ConvGaussianEncoder` without logvar """
 
@@ -10,7 +12,7 @@ class ConvEncoder(nn.Module):
         z_dim: int, in_features: int = 3,
         batchnorm: bool = True, batchnorm_momentum: float = 0.1,
         inplace: bool = True, resblock: bool = False,
-        hidden_filters: list[int] = [32, 64, 128, 256]
+        hidden_filters: list[int] = STANDARD_ARCHITECTURE
     ):
 
         super().__init__()
@@ -64,7 +66,7 @@ class ConvGaussianEncoder(ConvEncoder):
         z_dim: int, in_features: int = 3,
         batchnorm: bool = True, batchnorm_momentum: float = 0.1,
         inplace: bool = True, resblock: bool = False,
-        hidden_filters: list[int] = [32, 64, 128, 256]
+        hidden_filters: list[int] = STANDARD_ARCHITECTURE
     ):
 
         super().__init__(z_dim, in_features, batchnorm, batchnorm_momentum, inplace, resblock, hidden_filters)
@@ -98,7 +100,7 @@ class ConvDecoder(nn.Module):
         z_dim: int, out_features: int = 3,
         batchnorm: bool = True, batchnorm_momentum: float = 0.1,
         inplace: bool = True, resblock: bool = False,
-        hidden_filters: list[int] = [256, 128, 64, 32]
+        hidden_filters: list[int] = STANDARD_ARCHITECTURE[::-1]
     ):
         super().__init__()
 
