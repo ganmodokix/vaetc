@@ -130,8 +130,6 @@ class ConvDecoder(nn.Module):
             
         layers_conv += [
             nn.ConvTranspose2d(hidden_filters[-1], self.out_features, 4, stride=2, padding=1, padding_mode="zeros"),
-            ResBlock(self.out_features, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
-            ResBlock(self.out_features, batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
         ]
 
         layers = layers_fc + layers_conv + [nn.Sigmoid()]
