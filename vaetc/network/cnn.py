@@ -41,7 +41,7 @@ class ConvEncoder(nn.Module):
             
         layers_fc = [
             nn.Flatten(),
-            nn.Linear(256 * 4 * 4, 256),
+            nn.Linear(hidden_filters[-1] * 4 * 4, 256),
             nn.SiLU(inplace),
         ]
 
