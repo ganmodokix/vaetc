@@ -30,7 +30,7 @@ class ConvEncoder(nn.Module):
             ResBlock(hidden_filters[0], batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
             ResBlock(hidden_filters[0], batchnorm=batchnorm, batchnorm_momentum=batchnorm_momentum) if resblock else None,
         ]
-        for in_filters, out_filters in hidden_filters:
+        for in_filters, out_filters in zip(hidden_filters[:-1], hidden_filters[1:]):
             layers_conv += [
                 nn.Conv2d(in_filters, out_filters, 4, stride=2, padding=1, padding_mode=padding_mode),
                 nn.SiLU(inplace),
