@@ -45,7 +45,7 @@ class WVI(VAE):
         c_ae = ((x1 - x2) ** 2).view(batch_size, batch_size, -1).sum(dim=2)
         c_pb = ((gpz1 - gpz2) ** 2).view(batch_size, batch_size, -1).sum(dim=2)
         c_la = (((z1 - hqx1) - (z2 - hqx2)) ** 2).sum(dim=2)
-        c_oa = ((x2 - gpz2) ** 2).view(batch_size, batch_size, -1).sum(dim=2)
+        c_oa = ((x2 - gpz2) ** 2).view(1, batch_size, -1).sum(dim=2)
         # c_fd = # not used
 
         return c_ae, c_pb, c_la, c_oa
