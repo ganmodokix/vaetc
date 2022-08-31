@@ -32,7 +32,7 @@ class SWAE(VAE):
         zpth = (zp[:,None,:] * th).sum(dim=2)
         zth_sorted, _ = torch.sort(zth, dim=0)
         zpth_sorted, _ = torch.sort(zpth, dim=0)
-        loss_sw = ((zth_sorted - zpth_sorted).abs() ** 2).sum()
+        loss_sw = ((zth_sorted - zpth_sorted) ** 2).sum()
 
         loss = loss_ae + self.coeff_lambda * loss_sw
 
