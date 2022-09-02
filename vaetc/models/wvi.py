@@ -75,7 +75,7 @@ class WVI(VAE):
              + self.w3 * c_la \
              + self.w4 * c_oa
 
-        s = self.sinkhorn(cost_matrix)
+        s = self.sinkhorn_log(cost_matrix)
         if self.detach_sinkhorn:
             s = s.detach()
         loss = (s * cost_matrix).sum()
