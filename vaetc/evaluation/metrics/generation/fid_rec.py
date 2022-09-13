@@ -5,7 +5,7 @@ from scipy.linalg import sqrtm
 import torch
 from torch import nn
 
-from torchvision.models import inception_v3
+from torchvision.models import inception_v3, Inception_V3_Weights
 from torchvision import transforms
 
 from tqdm import tqdm
@@ -76,7 +76,7 @@ def fid_gaussian(
 
 def build_features_inception_v3():
 
-    features = inception_v3(pretrained=True)
+    features = inception_v3(weights=Inception_V3_Weights.IMAGENET1K_V1)
     features.dropout = nn.Sequential()
     features.fc = nn.Sequential()
     features = features.cuda()
