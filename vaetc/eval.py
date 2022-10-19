@@ -117,7 +117,7 @@ def visualize(
     
     if qualitative:
         reconstruction(checkpoint_best)
-        marginal_distribution(checkpoint_best)
+        # marginal_distribution(checkpoint_best)
         manifold(checkpoint_best)
         sampling(checkpoint_best)
     
