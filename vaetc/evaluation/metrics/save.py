@@ -62,24 +62,34 @@ def evaluate_set(data: EncodedData, random_state: int = 42) -> Dict[str, float]:
         add_result("FID (Reconstruction)", fid)
     else:
         debug_print("FID skipped; no generation")
+
+    gc.collect()
         
     # Intervention-based metrics
     debug_print("Calculating Beta-VAE metric...")
     betavae_metric = intervention.betavae_metric(data.z, data.t, random_state=random_state)
     add_result("Beta-VAE Metric", betavae_metric)
 
+    gc.collect()
+
     debug_print("Calculating FactorVAE metric...")
     factorvae_metric = intervention.factorvae_metric(data.z, data.t, random_state=random_state)
     add_result("FactorVAE Metric", factorvae_metric)
+
+    gc.collect()
 
     debug_print("Calculating IRS metric...")
     irs = intervention.irs(data.z, data.t)
     add_result("IRS", irs)
 
+    gc.collect()
+
     # Predictor-based metrics
     debug_print("Calculating SAP score...")
     sap_score = predictor.sap_score(data.z, data.t, random_state=random_state)
     add_result("SAP", sap_score)
+
+    gc.collect()
 
     # MIG-based in a [Do et al., 2020]'s manner
     if data.is_gaussian():
@@ -133,6 +143,8 @@ def evaluate_set(data: EncodedData, random_state: int = 42) -> Dict[str, float]:
             dcimig = do2020.dcimig(mean_i, logvar_i, t_i)
             add_result("DCIMIG", dcimig, verbose=False)
 
+            gc.collect()
+
     else:
 
         debug_print("Skipped the information-based metrics; q(z|x) is not Gaussian")
@@ -147,6 +159,8 @@ def evaluate_set(data: EncodedData, random_state: int = 42) -> Dict[str, float]:
         add_result(f"DCI Completeness (t_{i:03d})", completeness[i], verbose=False)
         add_result(f"DCI Informativeness (t_{i:03d})", informativeness[i], verbose=False)
 
+    gc.collect()
+
     # linear transfer learning
     debug_print("Evaluating the performance of transfer learning...")
     acc_linear, acc_dummy = transfer.linear_transferability(data.z, data.t)
@@ -155,6 +169,8 @@ def evaluate_set(data: EncodedData, random_state: int = 42) -> Dict[str, float]:
     for i in range(data.t_dim()):
         add_result(f"Linear Transferability Target Accuracy (t_{i:03d})", acc_linear[i], verbose=False)
         add_result(f"Dummy Target Accuracy (t_{i:03d})", acc_dummy[i], verbose=False)
+
+    gc.collect()
 
     return mean_result()
 
