@@ -35,7 +35,7 @@ def render(checkpoint: Checkpoint, n: int = 10):
 
     with torch.no_grad():
 
-        x, t = loader.__iter__().next()
+        x, t = next(iter(loader))
         x = x.to(checkpoint.model.device)
         z = checkpoint.model.encode(x).detach()
         z_dim = z.shape[1]

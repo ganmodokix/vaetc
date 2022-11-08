@@ -15,7 +15,7 @@ def render(loader, model):
 
     with torch.no_grad():
 
-        x, t = loader.__iter__().next()
+        x, t = next(iter(loader))
         
         x = x.to(model.device)
         z = model.encode(x)
