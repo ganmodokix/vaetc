@@ -103,7 +103,7 @@ def visualize(
     checkpoint_last: Optional[Checkpoint] = None,
     logging: bool = True,
     qualitative: bool = True,
-    quantitative: bool = True):
+    quantitative: bool | str = True):
 
     if checkpoint_last is None:
         checkpoint_last = checkpoint_best

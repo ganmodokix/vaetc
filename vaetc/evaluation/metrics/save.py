@@ -34,7 +34,7 @@ CELEBA_PROMINENT_ATTRIBUTES = [
     (39, "Young"),
 ]
 
-def evaluate_set(data: EncodedData, random_state: int = 42) -> Dict[str, float]:
+def evaluate_set(data: EncodedData, random_state: int = 42, disentanglement: bool = True, generation: bool = True) -> Dict[str, float]:
 
     results = {}
 
@@ -56,40 +56,44 @@ def evaluate_set(data: EncodedData, random_state: int = 42) -> Dict[str, float]:
         return means
 
     # Generation Quality
-    if data.x2 is not None:
-        debug_print("Calculating FID (Reconstruction)...")
-        fid = generation.fid_rec.fid(data.x, data.x2)
-        add_result("FID (Reconstruction)", fid)
-    else:
-        debug_print("FID skipped; no generation")
+    if generation:
 
-    gc.collect()
+        if data.x2 is not None:
+            debug_print("Calculating FID (Reconstruction)...")
+            fid = generation.fid_rec.fid(data.x, data.x2)
+            add_result("FID (Reconstruction)", fid)
+        else:
+            debug_print("FID skipped; no generation")
+
+        gc.collect()
+
+    if disentanglement:
         
-    # Intervention-based metrics
-    debug_print("Calculating Beta-VAE metric...")
-    betavae_metric = intervention.betavae_metric(data.z, data.t, random_state=random_state)
-    add_result("Beta-VAE Metric", betavae_metric)
+        # Intervention-based metrics
+        debug_print("Calculating Beta-VAE metric...")
+        betavae_metric = intervention.betavae_metric(data.z, data.t, random_state=random_state)
+        add_result("Beta-VAE Metric", betavae_metric)
 
-    gc.collect()
+        gc.collect()
 
-    debug_print("Calculating FactorVAE metric...")
-    factorvae_metric = intervention.factorvae_metric(data.z, data.t, random_state=random_state)
-    add_result("FactorVAE Metric", factorvae_metric)
+        debug_print("Calculating FactorVAE metric...")
+        factorvae_metric = intervention.factorvae_metric(data.z, data.t, random_state=random_state)
+        add_result("FactorVAE Metric", factorvae_metric)
 
-    gc.collect()
+        gc.collect()
 
-    debug_print("Calculating IRS metric...")
-    irs = intervention.irs(data.z, data.t)
-    add_result("IRS", irs)
+        debug_print("Calculating IRS metric...")
+        irs = intervention.irs(data.z, data.t)
+        add_result("IRS", irs)
 
-    gc.collect()
+        gc.collect()
 
-    # Predictor-based metrics
-    debug_print("Calculating SAP score...")
-    sap_score = predictor.sap_score(data.z, data.t, random_state=random_state)
-    add_result("SAP", sap_score)
+        # Predictor-based metrics
+        debug_print("Calculating SAP score...")
+        sap_score = predictor.sap_score(data.z, data.t, random_state=random_state)
+        add_result("SAP", sap_score)
 
-    gc.collect()
+        gc.collect()
 
     # MIG-based in a [Do et al., 2020]'s manner
     if data.is_gaussian():
@@ -113,37 +117,39 @@ def evaluate_set(data: EncodedData, random_state: int = 42) -> Dict[str, float]:
             add_result("Reconstruction MSE", mse.mean(), verbose=False)
             add_result("Reconstruction PSNR [dB]", psnr.mean(), verbose=False)
 
-            informativeness = do2020.informativeness(mean_i, logvar_i)
-            add_result("Informativeness", np.mean(informativeness), verbose=False)
-            for i in range(data.z_dim()):
-                add_result(f"Informativeness (z_{i:03})", informativeness[i], verbose=False)
-            
-            windin = do2020.windin(mean_i, logvar_i)
-            add_result("WINDIN", windin, verbose=False)
+            if disentanglement:
 
-            rmig_k, jemmig_k, normalized_jemmig_k = do2020.rmig_jemmig(mean_i, logvar_i, t_i)
-            add_result("RMIG", np.mean(rmig_k), verbose=False)
-            add_result("JEMMIG", np.mean(jemmig_k), verbose=False)
-            add_result("Normalized JEMMIG", np.mean(normalized_jemmig_k), verbose=False)
-            for i in range(data.t_dim()):
-                add_result(f"RMIG (t_{i:03})", rmig_k[i], verbose=False)
-                add_result(f"JEMMIG (t_{i:03})", jemmig_k[i], verbose=False)
-                add_result(f"Normalized JEMMIG (t_{i:03})", normalized_jemmig_k[i], verbose=False)
+                informativeness = do2020.informativeness(mean_i, logvar_i)
+                add_result("Informativeness", np.mean(informativeness), verbose=False)
+                for i in range(data.z_dim()):
+                    add_result(f"Informativeness (z_{i:03})", informativeness[i], verbose=False)
+                
+                windin = do2020.windin(mean_i, logvar_i)
+                add_result("WINDIN", windin, verbose=False)
 
-            mig_sup_i = do2020.mig_sup(mean_i, logvar_i, t_i)
-            add_result("MIG-sup", np.mean(mig_sup_i), verbose=False)
-            for i in range(data.z_dim()):
-                add_result(f"MIG-sup (z_{i:03})", mig_sup_i[i], verbose=False)
+                rmig_k, jemmig_k, normalized_jemmig_k = do2020.rmig_jemmig(mean_i, logvar_i, t_i)
+                add_result("RMIG", np.mean(rmig_k), verbose=False)
+                add_result("JEMMIG", np.mean(jemmig_k), verbose=False)
+                add_result("Normalized JEMMIG", np.mean(normalized_jemmig_k), verbose=False)
+                for i in range(data.t_dim()):
+                    add_result(f"RMIG (t_{i:03})", rmig_k[i], verbose=False)
+                    add_result(f"JEMMIG (t_{i:03})", jemmig_k[i], verbose=False)
+                    add_result(f"Normalized JEMMIG (t_{i:03})", normalized_jemmig_k[i], verbose=False)
 
-            modularity = do2020.modularity(mean_i, logvar_i, t_i)
-            add_result("Modularity Score", np.mean(modularity), verbose=False)
-            for i in range(data.z_dim()):
-                add_result(f"Modularity Score (z_{i:03})", modularity[i], verbose=False)
+                mig_sup_i = do2020.mig_sup(mean_i, logvar_i, t_i)
+                add_result("MIG-sup", np.mean(mig_sup_i), verbose=False)
+                for i in range(data.z_dim()):
+                    add_result(f"MIG-sup (z_{i:03})", mig_sup_i[i], verbose=False)
 
-            dcimig = do2020.dcimig(mean_i, logvar_i, t_i)
-            add_result("DCIMIG", dcimig, verbose=False)
+                modularity = do2020.modularity(mean_i, logvar_i, t_i)
+                add_result("Modularity Score", np.mean(modularity), verbose=False)
+                for i in range(data.z_dim()):
+                    add_result(f"Modularity Score (z_{i:03})", modularity[i], verbose=False)
 
-            gc.collect()
+                dcimig = do2020.dcimig(mean_i, logvar_i, t_i)
+                add_result("DCIMIG", dcimig, verbose=False)
+
+                gc.collect()
 
     else:
 
@@ -174,7 +180,13 @@ def evaluate_set(data: EncodedData, random_state: int = 42) -> Dict[str, float]:
 
     return mean_result()
 
-def measure(model: RLModel, dataset: Dataset, logger_path: str, suffix: str, num_measurement: int = 1):
+def measure(
+    model: RLModel, dataset: Dataset,
+    logger_path: str, suffix: str,
+    num_measurement: int = 1,
+    disentanglement: bool = True,
+    generation: bool = True,
+):
 
     data = EncodedData(model, dataset)
     batch_size = data.batch_size
@@ -192,18 +204,20 @@ def measure(model: RLModel, dataset: Dataset, logger_path: str, suffix: str, num
 
         debug_print(f"Measurement {k+1}/{num_measurement} ...")
 
-        evaluations = evaluate_set(data)
+        evaluations = evaluate_set(data, disentanglement=disentanglement, generation=generation)
         evaluations_sets.append(evaluations)
     
     del data
     gc.collect()
 
-    for k in range(num_measurement):
-        debug_print(f"FID (Generation) Measurement {k+1}/{num_measurement} ...")
-        fid = fid_gen.fid_generation(model, dataset, batch_size=batch_size)
-        evaluations_sets[k]["FID (Generation)"] = float(fid)
-    
-    gc.collect()
+    if generation:
+
+        for k in range(num_measurement):
+            debug_print(f"FID (Generation) Measurement {k+1}/{num_measurement} ...")
+            fid = fid_gen.fid_generation(model, dataset, batch_size=batch_size)
+            evaluations_sets[k]["FID (Generation)"] = float(fid)
+        
+        gc.collect()
 
     evaluations_mean, evaluations_se = {}, {}
     for key in evaluations_sets[0]:
