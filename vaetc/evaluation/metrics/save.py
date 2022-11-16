@@ -103,7 +103,7 @@ def evaluate_set(data: EncodedData, random_state: int = 42, disentanglement: boo
         # misjed = do2020.misjed(data.mean, data.logvar)
         # add_result("MISJED", misjed)
 
-        debug_print("Calculating Informativeness, WINDIN, (R)MIG, and JEMMIG...")
+        debug_print("Calculating Batch Metrics...")
         for x_i, t_i, z_i, mean_i, logvar_i, x2_i in tqdm(data.iter_batch(), total=data.num_batch()):
 
             elbo_est = elbo.elbo(x_i, x2_i, mean_i, logvar_i)
@@ -249,9 +249,9 @@ def evaluate(checkpoint: Checkpoint, disentanglement: bool = True, generation: b
 
     logger_path = checkpoint.options["logger_path"]
 
-    measure(checkpoint.model, checkpoint.dataset.validation_set, logger_path, "valid", disentanglement=disentanglement, generation=disentanglement)
+    measure(checkpoint.model, checkpoint.dataset.validation_set, logger_path, "valid", disentanglement=disentanglement, generation=generation)
     gc.collect()
 
-    measure(checkpoint.model, checkpoint.dataset.test_set, logger_path, "test", disentanglement=disentanglement, generation=disentanglement)
+    measure(checkpoint.model, checkpoint.dataset.test_set, logger_path, "test", disentanglement=disentanglement, generation=generation)
     gc.collect()
     
