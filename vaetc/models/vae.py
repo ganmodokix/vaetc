@@ -195,7 +195,7 @@ class VAE(GaussianEncoderAutoEncoderRLModel):
             self.decoder_shape_parameters["beta"] = hyperparameters["decoder_beta"]
 
         self.decoder_variance = hyperparameters.get("decoder_includes_variance", 1.0)
-        if self.decoder_variance == "trainiable":
+        if self.decoder_variance == "trainable":
             self.decoder_loggamma = nn.Parameter(torch.tensor(0.), requires_grad=True)
 
         # network layers
