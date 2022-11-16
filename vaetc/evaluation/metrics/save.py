@@ -18,7 +18,7 @@ from . import transfer
 from . import intervention
 from . import predictor
 from . import elbo
-from . import generation
+from . import generation as gens
 
 from vaetc.utils import debug_print
 from vaetc.checkpoint import Checkpoint
@@ -60,7 +60,7 @@ def evaluate_set(data: EncodedData, random_state: int = 42, disentanglement: boo
 
         if data.x2 is not None:
             debug_print("Calculating FID (Reconstruction)...")
-            fid = generation.fid_rec.fid(data.x, data.x2)
+            fid = gens.fid_rec.fid(data.x, data.x2)
             add_result("FID (Reconstruction)", fid)
         else:
             debug_print("FID skipped; no generation")
