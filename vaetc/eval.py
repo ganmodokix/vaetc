@@ -84,10 +84,10 @@ def sampling(checkpoint_best: Checkpoint):
     torch.cuda.synchronize()
     torch.cuda.empty_cache()
 
-def metrics(checkpoint_best: Checkpoint):
+def metrics(checkpoint_best: Checkpoint, disentanglement: bool = True, generation: bool = True):
 
     debug_print("Calculating metric values...")
-    met.evaluate(checkpoint_best)
+    met.evaluate(checkpoint_best, disentanglement=disentanglement, generation=generation)
 
     torch.cuda.synchronize()
     torch.cuda.empty_cache()
@@ -103,7 +103,9 @@ def visualize(
     checkpoint_last: Optional[Checkpoint] = None,
     logging: bool = True,
     qualitative: bool = True,
-    quantitative: bool | str = True):
+    quantitative: bool = True,
+    disentanglement: bool = True,
+    generation: bool = True):
 
     if checkpoint_last is None:
         checkpoint_last = checkpoint_best
@@ -122,7 +124,7 @@ def visualize(
         sampling(checkpoint_best)
     
     if quantitative:
-        metrics(checkpoint_best)
+        metrics(checkpoint_best, disentanglement=disentanglement, generation=generation)
     
     success_status(checkpoint_last)
 

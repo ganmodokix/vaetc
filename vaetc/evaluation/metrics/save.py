@@ -243,15 +243,15 @@ def measure(
             yaml.safe_dump(evaluations_sets[k], fp)
         debug_print(f"Evaluation {k+1}/{num_measurement} Output at {output_path}")
 
-def evaluate(checkpoint: Checkpoint):
+def evaluate(checkpoint: Checkpoint, disentanglement: bool = True, generation: bool = True):
 
     debug_print("in the validation set")
 
     logger_path = checkpoint.options["logger_path"]
 
-    measure(checkpoint.model, checkpoint.dataset.validation_set, logger_path, "valid")
+    measure(checkpoint.model, checkpoint.dataset.validation_set, logger_path, "valid", disentanglement=disentanglement, generation=disentanglement)
     gc.collect()
 
-    measure(checkpoint.model, checkpoint.dataset.test_set, logger_path, "test")
+    measure(checkpoint.model, checkpoint.dataset.test_set, logger_path, "test", disentanglement=disentanglement, generation=disentanglement)
     gc.collect()
     
