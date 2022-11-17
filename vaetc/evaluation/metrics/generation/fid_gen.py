@@ -46,6 +46,7 @@ def fid_generation(model: vaetc.models.VAE, dataset: vaetc.data.utils.ImageDatas
     mean_real, cov_real = fid_rec.mean_and_cov(f_real)
     mean_gen , cov_gen  = fid_rec.mean_and_cov(f_gen )
 
+    del loader._iterator
     del loader
     gc.collect()
     
