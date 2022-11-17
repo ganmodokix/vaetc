@@ -157,7 +157,7 @@ def evaluate_set(data: EncodedData, random_state: int = 42, disentanglement: boo
 
     # DCI scores
     if disentanglement:
-        
+
         debug_print("Calculating the DCI metrics...")
         disentanglement, completeness, informativeness = dci.dci_score(data.z, data.t)
         add_result("DCI Disentanglement", disentanglement)
@@ -244,6 +244,9 @@ def measure(
         with open(output_path, "w") as fp:
             yaml.safe_dump(evaluations_sets[k], fp)
         debug_print(f"Evaluation {k+1}/{num_measurement} Output at {output_path}")
+
+    del data
+    gc.collect()
 
 def evaluate(checkpoint: Checkpoint, disentanglement: bool = True, generation: bool = True):
 
