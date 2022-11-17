@@ -1,6 +1,7 @@
 import os
 import argparse
 import sys
+import gc
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -44,6 +45,9 @@ def fid_generation(model: vaetc.models.VAE, dataset: vaetc.data.utils.ImageDatas
 
     mean_real, cov_real = fid_rec.mean_and_cov(f_real)
     mean_gen , cov_gen  = fid_rec.mean_and_cov(f_gen )
+
+    del loader
+    gc.collect()
     
     return fid_rec.fid_gaussian(mean_real, cov_real, mean_gen, cov_gen)
 
