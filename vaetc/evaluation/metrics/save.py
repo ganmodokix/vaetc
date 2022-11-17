@@ -156,16 +156,18 @@ def evaluate_set(data: EncodedData, random_state: int = 42, disentanglement: boo
         debug_print("Skipped the information-based metrics; q(z|x) is not Gaussian")
 
     # DCI scores
-    debug_print("Calculating the DCI metrics...")
-    disentanglement, completeness, informativeness = dci.dci_score(data.z, data.t)
-    add_result("DCI Disentanglement", disentanglement)
-    add_result("DCI Completeness", np.mean(completeness))
-    add_result("DCI Informativeness", np.mean(informativeness))
-    for i in range(data.t_dim()):
-        add_result(f"DCI Completeness (t_{i:03d})", completeness[i], verbose=False)
-        add_result(f"DCI Informativeness (t_{i:03d})", informativeness[i], verbose=False)
+    if disentanglement:
+        
+        debug_print("Calculating the DCI metrics...")
+        disentanglement, completeness, informativeness = dci.dci_score(data.z, data.t)
+        add_result("DCI Disentanglement", disentanglement)
+        add_result("DCI Completeness", np.mean(completeness))
+        add_result("DCI Informativeness", np.mean(informativeness))
+        for i in range(data.t_dim()):
+            add_result(f"DCI Completeness (t_{i:03d})", completeness[i], verbose=False)
+            add_result(f"DCI Informativeness (t_{i:03d})", informativeness[i], verbose=False)
 
-    gc.collect()
+        gc.collect()
 
     # linear transfer learning
     debug_print("Evaluating the performance of transfer learning...")
