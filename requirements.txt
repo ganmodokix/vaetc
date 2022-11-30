@@ -11,6 +11,7 @@ seaborn
 torch
 torchvision
 torchinfo
+torchmetrics[image]
 tqdm
 requests
 orjson

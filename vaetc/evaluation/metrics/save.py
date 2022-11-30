@@ -221,6 +221,13 @@ def measure(
         
         gc.collect()
 
+        for k in range(num_measurement):
+            debug_print(f"KID (Generation) Measurement {k+1}/{num_measurement} ...")
+            fid = fid_gen.fid_generation(model, dataset, batch_size=batch_size)
+            evaluations_sets[k]["KID (Generation)"] = float(fid)
+        
+        gc.collect()
+
     evaluations_mean, evaluations_se = {}, {}
     for key in evaluations_sets[0]:
         values = [evaluations_sets[i][key] for i in range(num_measurement)]
