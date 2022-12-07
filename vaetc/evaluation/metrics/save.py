@@ -224,8 +224,8 @@ def measure(
 
         for k in range(num_measurement):
             debug_print(f"KID (Generation) Measurement {k+1}/{num_measurement} ...")
-            kid_value = kid.kid_generation(model, dataset, batch_size=batch_size)
-            evaluations_sets[k]["KID (Generation)"] = float(kid_value)
+            kid_mean, kid_std, n_subsets = kid.kid_generation(model, dataset, batch_size=batch_size)
+            evaluations_sets[k]["KID (Generation)"] = float(kid_mean)
         
         gc.collect()
 
