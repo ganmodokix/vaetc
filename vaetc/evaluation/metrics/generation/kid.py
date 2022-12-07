@@ -18,9 +18,8 @@ def kid_generation(model: vaetc.models.VAE, dataset: vaetc.data.utils.ImageDatas
 
     for x, t in tqdm(loader):
         
-        x: torch.Tensor
-
         this_batch_size = x.shape[0]
+        x = x.cuda()
 
         kid.update((x.clamp(0., 1.) * 255).to(dtype=torch.uint8).detach(), real=True)
         
