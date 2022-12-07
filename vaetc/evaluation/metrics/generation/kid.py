@@ -1,6 +1,7 @@
 from torchmetrics.image.kid import KernelInceptionDistance
 from tqdm import tqdm
 import gc
+import torch
 import vaetc
 from .fid_gen import make_loader
 
@@ -16,15 +17,16 @@ def kid_generation(model: vaetc.models.VAE, dataset: vaetc.data.utils.ImageDatas
     kid = KernelInceptionDistance()
 
     for x, t in tqdm(loader):
+        
+        x: torch.Tensor
 
         this_batch_size = x.shape[0]
 
-        kid.update(x, real=True)
+        kid.update((x.clamp(0., 1.) * 255).to(dtype=torch.uint8).detach(), real=True)
         
         zs = model.sample_prior(this_batch_size)
         xs = model.decode(zs)
-        xs = xs.detach()
-        kid.update(xs, real=False)
+        kid.update((xs.clamp(0., 1.) * 255).to(dtype=torch.uint8).detach(), real=False)
     
     kid_mean, kid_std = kid.compute()
     kid_mean = float(kid_mean.detach().cpu().numpy())
