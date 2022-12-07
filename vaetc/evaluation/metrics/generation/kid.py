@@ -14,7 +14,7 @@ def kid_generation(model: vaetc.models.VAE, dataset: vaetc.data.utils.ImageDatas
 
     model.eval()
 
-    kid = KernelInceptionDistance()
+    kid = KernelInceptionDistance().to(device="cuda")
 
     for x, t in tqdm(loader):
         
