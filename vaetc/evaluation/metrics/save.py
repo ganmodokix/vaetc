@@ -11,6 +11,7 @@ from tqdm import tqdm
 from torch.utils.data import Dataset
 
 from vaetc.evaluation.metrics.generation import fid_gen
+from vaetc.evaluation.metrics.generation import kid
 
 from . import do2020
 from . import dci
@@ -223,8 +224,8 @@ def measure(
 
         for k in range(num_measurement):
             debug_print(f"KID (Generation) Measurement {k+1}/{num_measurement} ...")
-            fid = fid_gen.fid_generation(model, dataset, batch_size=batch_size)
-            evaluations_sets[k]["KID (Generation)"] = float(fid)
+            kid_value = kid.kid_generation(model, dataset, batch_size=batch_size)
+            evaluations_sets[k]["KID (Generation)"] = float(kid_value)
         
         gc.collect()
 
