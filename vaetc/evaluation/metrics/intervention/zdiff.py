@@ -27,7 +27,7 @@ def make_dataset(z: np.ndarray, t: np.ndarray, size: int = 5000, t_threshold: fl
     debug_print("Creating dataset...")
 
     zdiff = np.empty(shape=(size, z_dim), dtype=z.dtype)
-    y = np.empty(shape=(size, ), dtype=np.int)
+    y = np.empty(shape=(size, ), dtype=int)
 
     available_factors = []
     binary = t > t_threshold
