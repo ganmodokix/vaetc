@@ -132,7 +132,7 @@ class TwoStageVAE(VAE):
         eps = torch.randn_like(x2)
         gamma = loggamma.exp()
 
-        return x2 + eps * (gamma[:,None] if x2.ndim == 2 else gamma[:,None,None,None])
+        return x2 + eps * gamma
 
     def forward(self, x: torch.Tensor):
 
