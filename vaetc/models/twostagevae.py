@@ -68,7 +68,7 @@ class kSimpleLatentDecoder(nn.Module):
         )
 
         self.dec_block_z = nn.Linear(hidden_dim + z_dim, z_dim)
-        self.dec_block_gamma = nn.Linear(hidden_dim + z_dim, 1)
+        self.dec_block_gamma = nn.Parameter(torch.tensor(0.0), requires_grad=True)
 
     def forward(self, u: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
 
@@ -76,9 +76,8 @@ class kSimpleLatentDecoder(nn.Module):
         hu = torch.cat([h, u], dim=1)
 
         z2 = self.dec_block_z(hu)
-        loggamma_z = self.dec_block_gamma(hu).squeeze(dim=1)
 
-        return z2, loggamma_z
+        return z2, self.dec_block_gamma
 
 class kSimpleImageDecoder(nn.Module):
 
@@ -86,23 +85,12 @@ class kSimpleImageDecoder(nn.Module):
         super().__init__()
 
         self.dec_block = ConvDecoder(z_dim)
-
-        hidden_dim = 256
-        self.gamma_block = nn.Sequential(
-            nn.Linear(z_dim, hidden_dim),
-            nn.SiLU(True),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.SiLU(True),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.SiLU(True),
-            nn.Linear(hidden_dim, 1),
-        )
+        self.dec_block_gamma = nn.Parameter(torch.tensor(0.0), requires_grad=True)
 
     def forward(self, z: torch.Tensor):
 
         x2 = self.dec_block(z)
-        loggamma_x = self.gamma_block(z).squeeze(dim=1)
-        return x2, loggamma_x
+        return x2, self.dec_block_gamma
 
 class TwoStageVAE(VAE):
     """ TwoStageVAE [Dai and Wipf, 2019]
@@ -227,9 +215,9 @@ class TwoStageVAE(VAE):
         if stage == 1:
 
             x2, loggamma_x = self.dec_stage1(z)
-            gamma_x = loggamma_x.exp()
+            invgamma_x = loggamma_x.neg().exp()
 
-            loss_ae = (0.5 * (((x - x2) ** 2).view(batch_size, -1) / gamma_x[:,None] + loggamma_x[:,None] + log2pi).sum(dim=1)).mean()
+            loss_ae = (0.5 * (((x - x2) ** 2).view(batch_size, -1) * invgamma_x + loggamma_x + log2pi).sum(dim=1)).mean()
             loss_reg = kl_gaussian(mean_z, logvar_z).mean()
 
             loss = loss_ae + loss_reg
@@ -247,9 +235,9 @@ class TwoStageVAE(VAE):
             u = self.reparameterize(mean_u, logvar_u)
 
             z2, loggamma_z = self.dec_stage2(u)
-            gamma_z = loggamma_z.exp()
+            invgamma_z = loggamma_z.neg().exp()
 
-            loss_ae = (0.5 * ((z - z2) ** 2 / gamma_z[:,None] + loggamma_z[:,None] + log2pi).sum(dim=1)).mean()
+            loss_ae = (0.5 * ((z - z2) ** 2 * invgamma_z + loggamma_z + log2pi).sum(dim=1)).mean()
             loss_reg = kl_gaussian(mean_u, logvar_u).mean()
 
             loss = loss_ae + loss_reg
