@@ -95,3 +95,11 @@ class HierarchicalRAE(VAE):
 
     def eval_batch(self, batch):
         return self.step_batch(batch, training=False)
+    
+    def sample_prior(self, batch_size: int) -> torch.Tensor:
+
+        eps = torch.randn((batch_size, self.z_dim), device=self.device)
+        idx = torch.randint(low=0, high=self.n_components, size=(batch_size, ), device=self.device)
+        mean = self.component_mean[idx]
+        std = (self.component_logvar[idx] * 0.5).exp()
+        return mean + std * eps
