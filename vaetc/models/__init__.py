@@ -73,3 +73,6 @@ from .tcwae import TCWAE
 register_model("tcwae", TCWAE)
 from .wvi import WVI
 register_model("wvi", WVI)
+
+from .rae import HierarchicalRAE
+register_model("rae", HierarchicalRAE)
