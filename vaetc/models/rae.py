@@ -72,7 +72,8 @@ class HierarchicalRAE(VAE):
             a = p / (phi @ b)
             tran = torch.diag(a) @ phi @ torch.diag(b)
 
-        dpdq = d - 2 * dp @ tran.detach() @ dq.T
+        tran = tran.detach()
+        dpdq = d - 2 * dp @ tran @ dq.T
         cost = dpq * (1 - self.beta) + dpdq * self.beta
         loss_hfgw = (cost * tran).sum()
 
