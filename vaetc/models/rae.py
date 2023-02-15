@@ -24,7 +24,7 @@ class HierarchicalRAE(VAE):
         self.component_mean = nn.Parameter(0.1 * torch.randn(size=(self.n_components, self.z_dim)), requires_grad=True)
         self.component_logvar = nn.Parameter(0.01 * torch.randn(size=(self.n_components, self.z_dim)), requires_grad=True)
 
-        self.proximal_iteration = int(hyperparameters.get("proximal_iteration", 50))
+        self.proximal_iteration = int(hyperparameters.get("proximal_iteration", 10))
         assert self.proximal_iteration > 0
 
     def step_batch(self, batch, optimizers=None, progress=None, training=False):
