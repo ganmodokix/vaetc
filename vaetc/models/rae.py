@@ -41,18 +41,20 @@ class HierarchicalRAE(VAE):
 
         component_sigma = (self.component_logvar * 0.5).exp()
         batch_sigma = (logvar * 0.5).exp()
+
+        EPS = 1e-6
         
         sse_mean = (mean[None,:,:] - self.component_mean[:,None,:]).square().sum(dim=2)
         sse_var = (batch_sigma[None,:,:] - component_sigma[:,None,:]).square().sum(dim=2)
-        dpq = sse_mean + sse_var # (K, N)
+        dpq = sse_mean + sse_var + EPS # (K, N)
 
         sse_mean = (self.component_mean[None,:,:] - self.component_mean[:,None,:]).square().sum(dim=2)
         sse_var = (component_sigma[None,:,:] - component_sigma[:,None,:]).square().sum(dim=2)
-        dp = sse_mean + sse_var # (K, K)
+        dp = sse_mean + sse_var + EPS # (K, K)
 
         sse_mean = (mean[None,:,:] - mean[:,None,:]).square().sum(dim=2)
         sse_var = (batch_sigma[None,:,:] - batch_sigma[:,None,:]).square().sum(dim=2)
-        dq = sse_mean + sse_var # (N, N)
+        dq = sse_mean + sse_var + EPS # (N, N)
 
         f1_st = (dp ** 2).sum(dim=1) / self.n_components # (K, )
         f2_st = (dq ** 2).sum(dim=1) / batch_size # (N, )
@@ -66,8 +68,8 @@ class HierarchicalRAE(VAE):
             cost = dpq * (1 - self.beta) + dpdq * self.beta
             cost = torch.clamp(cost, min=0)
 
-            alpha = 0.1 * cost.max()
-            phi = (-1 / alpha * cost).exp() * cost
+            alpha = 0.1 * cost.abs().max()
+            phi = (-cost / alpha).exp() * cost
             b = q / (phi.T @ a)
             a = p / (phi @ b)
             tran = torch.diag(a) @ phi @ torch.diag(b)
