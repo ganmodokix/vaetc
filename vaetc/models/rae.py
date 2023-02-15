@@ -68,7 +68,7 @@ class HierarchicalRAE(VAE):
             cost = dpq * (1 - self.beta) + dpdq * self.beta
             cost = torch.clamp(cost, min=0)
 
-            alpha = 0.1 * cost.abs().max()
+            alpha = cost.abs().max()
             phi = (-cost / alpha).exp() * cost
             b = q / (phi.T @ a)
             a = p / (phi @ b)
