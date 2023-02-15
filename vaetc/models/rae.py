@@ -21,8 +21,8 @@ class HierarchicalRAE(VAE):
         self.gamma = float(hyperparameters.get("gamma", 1.0))
         self.n_components = int(hyperparameters.get("n_components", 10))
 
-        self.component_mean = nn.Parameter(0.01 * torch.randn(size=(self.n_components, self.z_dim)), requires_grad=True)
-        self.component_logvar = nn.Parameter(-2 + 0.01 * torch.randn(size=(self.n_components, self.z_dim)), requires_grad=True)
+        self.component_mean = nn.Parameter(0.1 * torch.randn(size=(self.n_components, self.z_dim)), requires_grad=True)
+        self.component_logvar = nn.Parameter(0.01 * torch.randn(size=(self.n_components, self.z_dim)), requires_grad=True)
 
         self.proximal_iteration = int(hyperparameters.get("proximal_iteration", 50))
         assert self.proximal_iteration > 0
