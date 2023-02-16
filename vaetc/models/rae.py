@@ -63,16 +63,19 @@ class HierarchicalRAE(VAE):
         q = torch.ones_like(dq[:,0]) / batch_size
         tran = p[:,None] * q[None,:]
         a = p
+
         for j in range(self.proximal_iteration):
+
             dpdq = d - 2 * dp @ tran @ dq.T
             cost = dpq * (1 - self.beta) + dpdq * self.beta
-            cost = torch.clamp(cost, min=0)
 
             alpha = cost.abs().max()
-            phi = (-cost / alpha).exp() * cost
-            b = q / (phi.T @ a)
-            a = p / (phi @ b)
-            tran = torch.diag(a) @ phi @ torch.diag(b)
+            kernel = (-cost / alpha).exp() * cost
+            b = q / (kernel.T @ a)
+            for k in range(5):
+                a = p / (kernel @ b)
+                b = q / (kernel.T @ a)
+            tran = torch.diag(a) @ kernel @ torch.diag(b)
 
         tran = tran.detach()
         dpdq = d - 2 * dp @ tran @ dq.T
